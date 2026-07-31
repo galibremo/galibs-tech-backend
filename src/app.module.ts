@@ -16,6 +16,7 @@ import { StorageModule } from './core/storage/storage.module';
 import { MediaModule } from './modules/media/media.module';
 import { BrandsModule } from './modules/brands/brands.module';
 import { UtilsModule } from './modules/utils/utils.module';
+import { CategoriesModule } from './modules/categories/categories.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { UtilsModule } from './modules/utils/utils.module';
     EmailTemplateModule,
     BrandsModule,
     UtilsModule,
+    CategoriesModule,
   ],
   controllers: [],
   providers: [

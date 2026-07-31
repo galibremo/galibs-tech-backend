@@ -24,7 +24,7 @@ export const CreateCategorySchema = z
   .object({
     name: validateString('Name', { max: 255 }),
     slug: validateString('Slug', { max: 255 }),
-    parentId: validateString('Logo').nullable().optional(),
+    parentId: validateUUID('Parent ID').nullable().optional(),
   })
   .strict();
 
@@ -32,7 +32,7 @@ export const UpdateCategorySchema = z
   .object({
     name: validateString('Name', { max: 255 }).optional(),
     slug: validateString('Slug', { max: 255 }).optional(),
-    parentId: validateUUID('Logo').nullable().optional(),
+    parentId: validateUUID('Parent ID').nullable().optional(),
   })
   .strict()
   .refine((data) => Object.keys(data).length > 0, {

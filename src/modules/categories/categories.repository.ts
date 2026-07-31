@@ -13,23 +13,23 @@ export class CategoriesRepository {
         private readonly db: CategoriesDatabase,
     ) { }
 
-    findBrandById(id: string): Promise<typeof schema.brands.$inferSelect | undefined> {
-        return this.db.query.brands.findFirst({
-            where: eq(schema.brands.id, id),
+    findCategoryById(id: string): Promise<typeof schema.categories.$inferSelect | undefined> {
+        return this.db.query.categories.findFirst({
+            where: eq(schema.categories.id, id),
         });
     }
 
-    findBrandBySlug(slug: string): Promise<typeof schema.brands.$inferSelect | undefined> {
-        return this.db.query.brands.findFirst({
-            where: eq(schema.brands.slug, slug),
+    findCategoryBySlug(slug: string): Promise<typeof schema.categories.$inferSelect | undefined> {
+        return this.db.query.categories.findFirst({
+            where: eq(schema.categories.slug, slug),
         });
     }
 
-    async listBrands(
+    async listCategories(
         page: number = 1,
         pageSize: number = 10,
     ): Promise<{
-        rows: typeof schema.brands.$inferSelect[];
+        rows: typeof schema.categories.$inferSelect[];
         total: number;
         page: number;
         pageSize: number;
@@ -39,11 +39,11 @@ export class CategoriesRepository {
         const [rows, totalRows] = await Promise.all([
             this.db
                 .select()
-                .from(schema.brands)
-                .orderBy(desc(schema.brands.createdAt))
+                .from(schema.categories)
+                .orderBy(desc(schema.categories.createdAt))
                 .limit(pageSize)
                 .offset(offset),
-            this.db.select({ value: count() }).from(schema.brands),
+            this.db.select({ value: count() }).from(schema.categories),
         ]);
 
         return {
@@ -53,33 +53,39 @@ export class CategoriesRepository {
             pageSize,
         };
     }
+    
+    async getAllCategories(): Promise<typeof schema.categories.$inferSelect[]> {
+        return this.db.query.categories.findMany({
+            orderBy: desc(schema.categories.createdAt)
+        });
+    }
 
-    async createBrand(
-        data: typeof schema.brands.$inferInsert,
-    ): Promise<typeof schema.brands.$inferSelect | undefined> {
+    async createCategory(
+        data: typeof schema.categories.$inferInsert,
+    ): Promise<typeof schema.categories.$inferSelect | undefined> {
         return this.db
-            .insert(schema.brands)
+            .insert(schema.categories)
             .values(data)
             .returning()
             .then((rows) => rows[0]);
     }
 
-    async updateBrand(
+    async updateCategory(
         id: string,
-        data: Partial<typeof schema.brands.$inferInsert>,
-    ): Promise<typeof schema.brands.$inferSelect | undefined> {
+        data: Partial<typeof schema.categories.$inferInsert>,
+    ): Promise<typeof schema.categories.$inferSelect | undefined> {
         return this.db
-            .update(schema.brands)
+            .update(schema.categories)
             .set(data)
-            .where(eq(schema.brands.id, id))
+            .where(eq(schema.categories.id, id))
             .returning()
             .then((rows) => rows[0]);
     }
 
-    async deleteBrand(id: string): Promise<typeof schema.brands.$inferSelect | undefined> {
+    async deleteCategory(id: string): Promise<typeof schema.categories.$inferSelect | undefined> {
         return this.db
-            .delete(schema.brands)
-            .where(eq(schema.brands.id, id))
+            .delete(schema.categories)
+            .where(eq(schema.categories.id, id))
             .returning()
             .then((rows) => rows[0]);
     }
