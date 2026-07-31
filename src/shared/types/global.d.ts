@@ -13,7 +13,7 @@ declare global {
     name: string;
     email: string;
     image: string | null;
-    role: 'USER' | 'SUPER_ADMIN';
+    role: 'CUSTOMER' | 'ADMIN' | 'SUPER_ADMIN';
     lastLoginMethod: string | null | undefined;
     emailVerified: boolean;
     createdAt: Date;

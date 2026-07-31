@@ -60,7 +60,7 @@ export class UsersService {
         name: this.getPersistedName(data.name, data.email),
         email: data.email,
         emailVerified: data.emailVerified ?? false,
-        role: data.role ?? 'USER',
+        role: data.role ?? 'CUSTOMER',
       });
 
       if (!createdUser) throw notFoundError('user_not_found', 'User not found');
