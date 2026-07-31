@@ -32,8 +32,7 @@ export class MediaService {
 
     const url = await this.storageService.uploadFile(
       file.buffer,
-      key,
-      file.mimetype,
+      key
     );
 
     return { url, key };
@@ -61,7 +60,6 @@ export class MediaService {
     const publicUrl = await this.storageService.uploadFile(
       buffer,
       key,
-      'image/webp',
     );
 
     return {

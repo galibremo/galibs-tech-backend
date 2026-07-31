@@ -22,7 +22,6 @@ export class StorageService {
   async uploadFile(
     buffer: Buffer,
     key: string,
-    mimeType: string,
   ): Promise<string> {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
