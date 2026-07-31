@@ -12,7 +12,7 @@ const PUBLIC_PROFILE_PREFIX = 'profiles/';
 
 @Injectable()
 export class MediaService {
-  constructor(private readonly storageService: StorageService) {}
+  constructor(private readonly storageService: StorageService) { }
 
   async uploadFile(
     actor: CurrentUser,

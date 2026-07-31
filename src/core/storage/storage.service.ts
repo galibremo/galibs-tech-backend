@@ -22,7 +22,7 @@ export class StorageService {
   async uploadFile(
     buffer: Buffer,
     key: string,
-    mimeType: string, // Kept for compatibility, though Cloudinary detects it
+    mimeType: string,
   ): Promise<string> {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
@@ -30,13 +30,21 @@ export class StorageService {
           public_id: key,
           resource_type: 'auto',
         },
-        (error, result) => {
+        (error: unknown, result) => {
           if (error) {
             this.logger.error(
               `Failed to upload file to Cloudinary: ${key}`,
               error,
             );
-            return reject(error);
+            const errorMessage =
+              error instanceof Error
+                ? error.message
+                : error && typeof error === 'object' && 'message' in error
+                  ? String(error.message)
+                  : 'Unknown Cloudinary error';
+            const err =
+              error instanceof Error ? error : new Error(errorMessage);
+            return reject(err);
           }
           if (result) {
             resolve(result.secure_url);
