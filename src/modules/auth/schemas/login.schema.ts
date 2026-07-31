@@ -24,7 +24,7 @@ export const LoginUserSchema = z
     name: validateString('Name'),
     email: validateEmail,
     emailVerified: validateBoolean('Email verified'),
-    role: validateEnum('Role', ['CUSTOMER', 'ADMIN', 'SUPER_ADMIN']),
+    role: validateEnum('Role', ['CUSTOMER', 'AGENT', 'SUPER_ADMIN']),
     image: validateString('Image').nullable(),
     hasPassword: validateBoolean('Password credential').optional(),
     createdAt: validateDate('Created at'),

@@ -189,7 +189,7 @@ If you have any questions about this invitation, please reach out to {{createdBy
 © {{year}} ${COMPANY_NAME} | ${COMPANY_ADDRESS}`,
         variables: [
             { name: 'name', type: 'string', required: true, description: 'Recipient display name' },
-            { name: 'role', type: 'string', required: true, description: 'Assigned role (SUPER_ADMIN, ADMIN, MANAGER, USER)' },
+            { name: 'role', type: 'string', required: true, description: 'Assigned role (SUPER_ADMIN, AGENT, CUSTOMER)' },
             { name: 'createdByName', type: 'string', required: true, description: 'Name of the admin who created the invitation' },
             { name: 'appUrl', type: 'string', required: true, description: 'Application URL' },
             { name: 'year', type: 'number', required: true, description: 'Current year for footer copyright' },

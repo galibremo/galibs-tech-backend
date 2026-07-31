@@ -112,7 +112,7 @@ export const TEMPLATE_REGISTRY: Record<
       name: 'role',
       type: 'string',
       required: true,
-      description: 'Assigned role (ADMIN, MANAGER, USER, SUPER_ADMIN)',
+      description: 'Assigned role (AGENT, CUSTOMER, SUPER_ADMIN)',
     },
     {
       name: 'createdByName',

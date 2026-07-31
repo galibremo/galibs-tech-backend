@@ -5,7 +5,7 @@ interface CurrentUser {
   email: string;
   emailVerified: boolean;
   image: string | null | undefined;
-  role: 'CUSTOMER' | 'ADMIN' | 'SUPER_ADMIN';
+  role: 'CUSTOMER' | 'AGENT' | 'SUPER_ADMIN';
   createdAt: Date;
   updatedAt: Date;
 }
