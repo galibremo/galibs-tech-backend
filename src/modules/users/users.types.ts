@@ -12,7 +12,7 @@ export interface UserManagementRow {
   email: string;
   image: string | null;
   emailVerified: boolean;
-  role: 'USER' | 'SUPER_ADMIN';
+  role: 'CUSTOMER' | 'ADMIN' | 'SUPER_ADMIN';
   activeSessionCount: number;
   createdAt: Date;
   updatedAt: Date;

@@ -22,7 +22,7 @@ export const users = pgTable(
     emailVerified: boolean('email_verified').default(false).notNull(),
     lastLoginMethod: text('last_login_method'),
     image: text('image'),
-    role: roleTypeEnum('role').default('USER').notNull(),
+    role: roleTypeEnum('role').default('CUSTOMER').notNull(),
     ...timestamps,
   },
   (table) => [index('users_email_verified_idx').on(table.emailVerified)],

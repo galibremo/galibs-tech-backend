@@ -121,7 +121,7 @@ export const UserManagementResponseSchema = z.object({
   email: validateEmail,
   image: validateString('Image').nullable(),
   emailVerified: validateBoolean('Email Verified'),
-  role: validateEnum('Role', ['USER', 'SUPER_ADMIN']),
+  role: validateEnum('Role', ['CUSTOMER', 'ADMIN', 'SUPER_ADMIN']),
   activeSessionCount: validateNumber('Active Session Count', {
     min: 0,
     int: true,
