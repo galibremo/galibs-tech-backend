@@ -14,6 +14,7 @@ import { EmailProviderModule } from './modules/email-provider/email-provider.mod
 import { EmailTemplateModule } from './modules/email-template/email-template.module';
 import { StorageModule } from './core/storage/storage.module';
 import { MediaModule } from './modules/media/media.module';
+import { BrandsModule } from './modules/brands/brands.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { MediaModule } from './modules/media/media.module';
     EmailLogsModule,
     EmailProviderModule,
     EmailTemplateModule,
+    BrandsModule,
   ],
   controllers: [],
   providers: [
