@@ -2,23 +2,17 @@
 
 import * as AuthDrizzleSchema from '../schema/drizzle/auth.drizzle.schema';
 import * as BrandDrizzleSchema from '../schema/drizzle/brand.drizzle.schema';
-import * as CartDrizzleSchema from '../schema/drizzle/cart.drizzle.schema';
 import * as CategoryDrizzleSchema from '../schema/drizzle/category.drizzle.schema';
 import * as EmailDrizzleSchema from '../schema/drizzle/email.drizzle.schema';
 import * as EnumDrizzleSchema from '../schema/drizzle/enum.drizzle.schema';
-import * as OrderDrizzleSchema from '../schema/drizzle/order.drizzle.schema';
-import * as ProductDrizzleSchema from '../schema/drizzle/product.drizzle.schema';
 import * as RelationDrizzleSchema from '../schema/drizzle/relation.drizzle.schema';
 
 const schema = {
 	...AuthDrizzleSchema,
 	...BrandDrizzleSchema,
-	...CartDrizzleSchema,
 	...CategoryDrizzleSchema,
 	...EmailDrizzleSchema,
 	...EnumDrizzleSchema,
-	...OrderDrizzleSchema,
-	...ProductDrizzleSchema,
 	...RelationDrizzleSchema,
 };
 
