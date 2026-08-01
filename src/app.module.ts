@@ -17,6 +17,7 @@ import { MediaModule } from './modules/media/media.module';
 import { BrandsModule } from './modules/brands/brands.module';
 import { UtilsModule } from './modules/utils/utils.module';
 import { CategoriesModule } from './modules/categories/categories.module';
+import { ProductsModule } from './modules/products/products.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { CategoriesModule } from './modules/categories/categories.module';
     BrandsModule,
     UtilsModule,
     CategoriesModule,
+    ProductsModule,
   ],
   controllers: [],
   providers: [
