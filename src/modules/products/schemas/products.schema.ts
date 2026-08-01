@@ -31,9 +31,9 @@ export const ProductsListQuerySchema = baseQuerySchema(PRODUCT_SORTABLE_FIELDS).
 export const CreateProductVariantSchema = z
   .object({
     sku: validateString('SKU', { max: 100 }).optional(), // Optional, auto-generated if not provided
-    color: validateString('Color', { max: 50 }).nullable().optional(),
-    size: validateString('Size', { max: 50 }).nullable().optional(),
-    priceAdjustment: z.union([z.string(), z.number()]).optional().transform((v) => (v ? String(v) : '0')),
+    regularPrice: z.union([z.string(), z.number()]).transform((v) => String(v)),
+    discountPrice: z.union([z.string(), z.number()]).nullable().optional().transform((v) => (v ? String(v) : null)),
+    variantCombination: z.record(z.string(), z.string()).default({}),
     stock: validateNumber('Stock', { min: 0, int: true }).default(0),
   })
   .strict();
@@ -45,12 +45,12 @@ export const CreateProductSchema = z
     name: validateString('Name', { max: 255 }),
     slug: validateString('Slug', { max: 255 }),
     sku: validateString('SKU', { max: 100 }).optional(), // Optional, auto-generated if not provided
-    summary: validateString('Summary').nullable().optional(),
+    shortDescription: validateString('Short Description').nullable().optional(),
     description: validateString('Description').nullable().optional(),
     regularPrice: z.union([z.string(), z.number()]).transform((v) => String(v)),
     discountPrice: z.union([z.string(), z.number()]).nullable().optional().transform((v) => (v ? String(v) : null)),
     stock: validateNumber('Stock', { min: 0, int: true }).default(0),
-    stockStatus: validateString('Stock Status', { max: 50 }).default('IN_STOCK'),
+    stockStatus: z.enum(['IN_STOCK', 'OUT_OF_STOCK', 'LOW_STOCK', 'PRE_ORDER', 'UPCOMING']).default('IN_STOCK'),
     images: z.array(z.any()).default([]), // Expected to be JSON
     specifications: z.record(z.string(), z.any()).default({}), // Expected to be JSON
     warranty: validateString('Warranty', { max: 255 }).nullable().optional(),
@@ -65,9 +65,9 @@ export const UpdateProductVariantSchema = z
   .object({
     id: validateUUID('Variant ID').optional(), // If provided, update; if not, create new
     sku: validateString('SKU', { max: 100 }).optional(),
-    color: validateString('Color', { max: 50 }).nullable().optional(),
-    size: validateString('Size', { max: 50 }).nullable().optional(),
-    priceAdjustment: z.union([z.string(), z.number()]).optional().transform((v) => (v ? String(v) : undefined)),
+    regularPrice: z.union([z.string(), z.number()]).optional().transform((v) => (v ? String(v) : undefined)),
+    discountPrice: z.union([z.string(), z.number()]).nullable().optional().transform((v) => (v ? String(v) : undefined)),
+    variantCombination: z.record(z.string(), z.string()).optional(),
     stock: validateNumber('Stock', { min: 0, int: true }).optional(),
   })
   .strict();
@@ -79,12 +79,12 @@ export const UpdateProductSchema = z
     name: validateString('Name', { max: 255 }).optional(),
     slug: validateString('Slug', { max: 255 }).optional(),
     sku: validateString('SKU', { max: 100 }).optional(),
-    summary: validateString('Summary').nullable().optional(),
+    shortDescription: validateString('Short Description').nullable().optional(),
     description: validateString('Description').nullable().optional(),
     regularPrice: z.union([z.string(), z.number()]).optional().transform((v) => (v ? String(v) : undefined)),
     discountPrice: z.union([z.string(), z.number()]).nullable().optional().transform((v) => (v ? String(v) : undefined)),
     stock: validateNumber('Stock', { min: 0, int: true }).optional(),
-    stockStatus: validateString('Stock Status', { max: 50 }).optional(),
+    stockStatus: z.enum(['IN_STOCK', 'OUT_OF_STOCK', 'LOW_STOCK', 'PRE_ORDER', 'UPCOMING']).optional(),
     images: z.array(z.any()).optional(),
     specifications: z.record(z.string(), z.any()).optional(),
     warranty: validateString('Warranty', { max: 255 }).nullable().optional(),
@@ -102,9 +102,9 @@ export const ProductVariantResponseSchema = z.object({
   id: validateUUID('Variant ID'),
   productId: validateUUID('Product ID'),
   sku: validateString('SKU'),
-  color: validateString('Color').nullable(),
-  size: validateString('Size').nullable(),
-  priceAdjustment: validateString('Price Adjustment').nullable(),
+  regularPrice: validateString('Regular Price'),
+  discountPrice: validateString('Discount Price').nullable(),
+  variantCombination: z.any(),
   stock: validateNumber('Stock'),
 });
 
@@ -115,7 +115,7 @@ export const ProductResponseSchema = z.object({
   name: validateString('Name'),
   slug: validateString('Slug'),
   sku: validateString('SKU'),
-  summary: validateString('Summary').nullable(),
+  shortDescription: validateString('Short Description').nullable(),
   description: validateString('Description').nullable(),
   regularPrice: validateString('Regular Price'),
   discountPrice: validateString('Discount Price').nullable(),
