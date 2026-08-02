@@ -75,6 +75,21 @@ export class CategoriesService {
                 name: data.name,
                 slug: data.slug,
                 parentId: data.parentId ?? null,
+                path: data.path,
+                depth: data.depth,
+                description: data.description ?? null,
+                shortDescription: data.shortDescription ?? null,
+                imageUrl: data.imageUrl ?? null,
+                isActive: data.isActive,
+                isFeatured: data.isFeatured,
+                showInMenu: data.showInMenu,
+                sortOrder: data.sortOrder,
+                minPrice: data.minPrice ?? null,
+                maxPrice: data.maxPrice ?? null,
+                productCount: data.productCount,
+                metaTitle: data.metaTitle ?? null,
+                metaDescription: data.metaDescription ?? null,
+                seoContent: data.seoContent ?? null,
             });
 
             if (!createdCategory) throw notFoundError('category_not_found', 'Category could not be created');

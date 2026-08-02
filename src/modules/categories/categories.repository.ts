@@ -84,7 +84,8 @@ export class CategoriesRepository {
 
     async deleteCategory(id: string): Promise<typeof schema.categories.$inferSelect | undefined> {
         return this.db
-            .delete(schema.categories)
+            .update(schema.categories)
+            .set({ isActive: false })
             .where(eq(schema.categories.id, id))
             .returning()
             .then((rows) => rows[0]);
