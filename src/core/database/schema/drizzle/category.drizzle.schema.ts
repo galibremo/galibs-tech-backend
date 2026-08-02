@@ -1,4 +1,4 @@
-import { foreignKey, pgTable, varchar, uuid, boolean, integer, text } from 'drizzle-orm/pg-core';
+import { pgTable, varchar, uuid, boolean, integer, text, uniqueIndex, index, AnyPgColumn } from 'drizzle-orm/pg-core';
 import { timestamps } from '../../helpers';
 
 export const categories = pgTable(
@@ -7,7 +7,9 @@ export const categories = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     name: varchar('name', { length: 255 }).notNull(),
     slug: varchar('slug', { length: 255 }).unique().notNull(),
-    parentId: uuid('parent_id'),
+    parentId: uuid("parent_id").references((): AnyPgColumn => categories.id, {
+      onDelete: "set null",
+    }),
     path: varchar('path', { length: 512 }).notNull(),
     depth: integer('depth').notNull().default(0),
     description: text('description'),
@@ -26,9 +28,11 @@ export const categories = pgTable(
     ...timestamps,
   },
   (table) => [
-    foreignKey({
-      columns: [table.parentId],
-      foreignColumns: [table.id],
-    }).onDelete('cascade'),
+    uniqueIndex("categories_slug_uidx").on(table.slug),
+    uniqueIndex("categories_path_uidx").on(table.path),
+    index("categories_parent_idx").on(table.parentId),
+    index("categories_menu_idx").on(table.showInMenu, table.isActive, table.sortOrder),
+    index("categories_path_prefix_idx").using("btree", table.path),
+    index("categories_active_featured_idx").on(table.isActive, table.isFeatured),
   ],
 );
