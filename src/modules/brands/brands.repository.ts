@@ -78,7 +78,8 @@ export class BrandsRepository {
 
     async deleteBrand(id: string): Promise<typeof schema.brands.$inferSelect | undefined> {
         return this.db
-            .delete(schema.brands)
+            .update(schema.brands)
+            .set({ isActive: false })
             .where(eq(schema.brands.id, id))
             .returning()
             .then((rows) => rows[0]);

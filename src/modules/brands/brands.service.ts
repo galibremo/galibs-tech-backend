@@ -37,7 +37,13 @@ export class BrandsService {
             const createdBrand = await this.brandsRepository.createBrand({
                 name: data.name,
                 slug: data.slug,
-                logo: data.logo ?? null,
+                logoUrl: data.logoUrl ?? null,
+                description: data.description ?? null,
+                isActive: data.isActive,
+                isFeatured: data.isFeatured,
+                sortOrder: data.sortOrder,
+                metaTitle: data.metaTitle ?? null,
+                metaDescription: data.metaDescription ?? null,
             });
 
             if (!createdBrand) throw notFoundError('brand_not_found', 'Brand could not be created');

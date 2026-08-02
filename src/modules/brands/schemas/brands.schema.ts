@@ -6,6 +6,7 @@ import {
   type SortableField,
 } from '../../../core/validators/base-query.schema';
 import {
+  validateBoolean,
   validateDate,
   validateNumber,
   validateString,
@@ -24,7 +25,13 @@ export const CreateBrandSchema = z
   .object({
     name: validateString('Name', { max: 255 }),
     slug: validateString('Slug', { max: 255 }),
-    logo: validateString('Logo').nullable().optional(),
+    logoUrl: validateString('Logo URL').nullable().optional(),
+    description: validateString('Description').nullable().optional(),
+    isActive: validateBoolean('Is Active').optional().default(true),
+    isFeatured: validateBoolean('Is Featured').optional().default(false),
+    sortOrder: validateNumber('Sort Order').optional().default(0),
+    metaTitle: validateString('Meta Title', { max: 255 }).nullable().optional(),
+    metaDescription: validateString('Meta Description').nullable().optional(),
   })
   .strict();
 
@@ -32,7 +39,13 @@ export const UpdateBrandSchema = z
   .object({
     name: validateString('Name', { max: 255 }).optional(),
     slug: validateString('Slug', { max: 255 }).optional(),
-    logo: validateString('Logo').nullable().optional(),
+    logoUrl: validateString('Logo URL').nullable().optional(),
+    description: validateString('Description').nullable().optional(),
+    isActive: validateBoolean('Is Active').optional(),
+    isFeatured: validateBoolean('Is Featured').optional(),
+    sortOrder: validateNumber('Sort Order').optional(),
+    metaTitle: validateString('Meta Title', { max: 255 }).nullable().optional(),
+    metaDescription: validateString('Meta Description').nullable().optional(),
   })
   .strict()
   .refine((data) => Object.keys(data).length > 0, {
@@ -43,7 +56,13 @@ export const BrandResponseSchema = z.object({
   id: validateUUID('Brand ID'),
   name: validateString('Name'),
   slug: validateString('Slug'),
-  logo: validateString('Logo').nullable(),
+  logoUrl: validateString('Logo URL').nullable(),
+  description: validateString('Description').nullable(),
+  isActive: validateBoolean('Is Active'),
+  isFeatured: validateBoolean('Is Featured'),
+  sortOrder: validateNumber('Sort Order'),
+  metaTitle: validateString('Meta Title').nullable(),
+  metaDescription: validateString('Meta Description').nullable(),
   createdAt: validateDate('Created At'),
   updatedAt: validateDate('Updated At'),
 });
