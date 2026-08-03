@@ -6,7 +6,9 @@ import * as BrandDrizzleSchema from '../schema/drizzle/brand.drizzle.schema';
 import * as CategoryDrizzleSchema from '../schema/drizzle/category.drizzle.schema';
 import * as EmailDrizzleSchema from '../schema/drizzle/email.drizzle.schema';
 import * as EnumDrizzleSchema from '../schema/drizzle/enum.drizzle.schema';
+import * as ProductDrizzleSchema from '../schema/drizzle/product.drizzle.schema';
 import * as RelationDrizzleSchema from '../schema/drizzle/relation.drizzle.schema';
+import * as VariantDrizzleSchema from '../schema/drizzle/variant.drizzle.schema';
 
 const schema = {
 	...AttributeDrizzleSchema,
@@ -15,7 +17,9 @@ const schema = {
 	...CategoryDrizzleSchema,
 	...EmailDrizzleSchema,
 	...EnumDrizzleSchema,
+	...ProductDrizzleSchema,
 	...RelationDrizzleSchema,
+	...VariantDrizzleSchema,
 };
 
 export default schema;

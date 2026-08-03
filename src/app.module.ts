@@ -18,6 +18,8 @@ import { BrandsModule } from './modules/brands/brands.module';
 import { UtilsModule } from './modules/utils/utils.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { AttributesModule } from './modules/attributes/attributes.module';
+import { ProductsModule } from './modules/products/products.module';
+import { VariantsModule } from './modules/variants/variants.module';
 
 @Module({
   imports: [
@@ -51,6 +53,8 @@ import { AttributesModule } from './modules/attributes/attributes.module';
     UtilsModule,
     CategoriesModule,
     AttributesModule,
+    ProductsModule,
+    VariantsModule,
   ],
   controllers: [],
   providers: [

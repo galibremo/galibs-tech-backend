@@ -14,6 +14,7 @@ import {
 import { brands } from "./brand.drizzle.schema";
 import { categories } from "./category.drizzle.schema";
 import { attributeDataTypeEnum, attributeInputTypeEnum } from "./enum.drizzle.schema";
+import { products } from "./product.drizzle.schema";
 import { timestamps } from "../../helpers";
 
 export const attributes = pgTable(
@@ -83,7 +84,9 @@ export const categoryAttributes = pgTable(
 export const productAttributeValues = pgTable(
   "product_attribute_values",
   {
-    productId: uuid("product_id").notNull(), // TODO: Add .references(() => products.id) when products table is added
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
     attributeId: uuid("attribute_id")
       .notNull()
       .references(() => attributes.id, { onDelete: "cascade" }),
@@ -105,7 +108,9 @@ export const productAttributeValues = pgTable(
 export const productNumericAttributes = pgTable(
   "product_numeric_attributes",
   {
-    productId: uuid("product_id").notNull(), // TODO: Add .references(() => products.id) when products table is added
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
     attributeId: uuid("attribute_id")
       .notNull()
       .references(() => attributes.id, { onDelete: "cascade" }),
