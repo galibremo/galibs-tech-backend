@@ -24,13 +24,13 @@ import {
   type UpdateAttributeOptionDto,
 } from './schemas/attributes.schema';
 
-@UseGuards(AuthGuard)
-@Roles(['SUPER_ADMIN'])
 @Controller('attribute-options')
 export class AttributeOptionsController {
   constructor(private readonly attributesService: AttributesService) {}
 
   @Patch(':id')
+  @UseGuards(AuthGuard)
+  @Roles(['SUPER_ADMIN'])
   async updateOption(
     @Param('id', ParseUUIDPipe) id: string,
     @Req() request: ExpressRequest,
@@ -49,6 +49,8 @@ export class AttributeOptionsController {
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard)
+  @Roles(['SUPER_ADMIN'])
   async deleteOption(
     @Param('id', ParseUUIDPipe) id: string,
     @Req() request: ExpressRequest,

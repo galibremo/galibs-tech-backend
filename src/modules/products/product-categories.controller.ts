@@ -21,13 +21,13 @@ import {
   type ProductApiResponse,
 } from './schemas/products.schema';
 
-@UseGuards(AuthGuard)
-@Roles(['SUPER_ADMIN'])
 @Controller('products')
 export class ProductCategoriesController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post(':id/categories')
+  @UseGuards(AuthGuard)
+  @Roles(['SUPER_ADMIN'])
   async addProductCategories(
     @Param('id', ParseUUIDPipe) id: string,
     @Req() request: ExpressRequest,

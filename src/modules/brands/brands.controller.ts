@@ -15,8 +15,6 @@ import {
     type BrandResponse
 } from './schemas/brands.schema';
 
-@UseGuards(AuthGuard)
-@Roles(['SUPER_ADMIN'])
 @Controller('brands')
 export class BrandsController {
     constructor(private readonly brandsService: BrandsService) {}
@@ -56,6 +54,8 @@ export class BrandsController {
     }
 
     @Post()
+    @UseGuards(AuthGuard)
+    @Roles(['SUPER_ADMIN'])
     async createBrand(
         @Req() request: ExpressRequest,
         @Body(new ZodValidationPipe(CreateBrandSchema)) body: CreateBrandDto,
@@ -65,6 +65,8 @@ export class BrandsController {
     }
 
     @Patch(':id')
+    @UseGuards(AuthGuard)
+    @Roles(['SUPER_ADMIN'])
     async updateBrand(
         @Param('id', ParseUUIDPipe) id: string,
         @Req() request: ExpressRequest,
@@ -75,6 +77,8 @@ export class BrandsController {
     }
 
     @Delete(':id')
+    @UseGuards(AuthGuard)
+    @Roles(['SUPER_ADMIN'])
     async deleteBrand(
         @Param('id', ParseUUIDPipe) id: string,
         @Req() request: ExpressRequest,

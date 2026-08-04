@@ -21,13 +21,13 @@ import {
   type ProductImageApiResponse,
 } from './schemas/products.schema';
 
-@UseGuards(AuthGuard)
-@Roles(['SUPER_ADMIN'])
 @Controller('products')
 export class ProductImagesController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post(':id/images')
+  @UseGuards(AuthGuard)
+  @Roles(['SUPER_ADMIN'])
   async addProductImage(
     @Param('id', ParseUUIDPipe) id: string,
     @Req() request: ExpressRequest,
