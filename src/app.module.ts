@@ -20,6 +20,7 @@ import { CategoriesModule } from './modules/categories/categories.module';
 import { AttributesModule } from './modules/attributes/attributes.module';
 import { ProductsModule } from './modules/products/products.module';
 import { VariantsModule } from './modules/variants/variants.module';
+import { SpecificationsModule } from './modules/specifications/specifications.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { VariantsModule } from './modules/variants/variants.module';
     AttributesModule,
     ProductsModule,
     VariantsModule,
+    SpecificationsModule,
   ],
   controllers: [],
   providers: [

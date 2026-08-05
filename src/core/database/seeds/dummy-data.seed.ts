@@ -1,4 +1,3 @@
-import { eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 import schema from '../drizzle/drizzle.schema';
@@ -20,6 +19,11 @@ import {
     productVariantOptionValues,
     productVariantAttributeValues,
 } from '../schema/drizzle/variant.drizzle.schema';
+import {
+    specificationGroups,
+    specificationFields,
+    productSpecifications,
+} from '../schema/drizzle/specification.drizzle.schema';
 
 export async function seedDummyData(
     database: NodePgDatabase<typeof schema>,
@@ -223,6 +227,34 @@ export async function seedDummyData(
         { variantId: var3.id, attributeId: attrStorage.id, attributeOptionId: opt128.id },
         { variantId: var4.id, attributeId: attrColor.id, attributeOptionId: optBlack.id },
         { variantId: var4.id, attributeId: attrStorage.id, attributeOptionId: opt256.id },
+    ]);
+
+    // 6. Specifications
+    const [specGroupProcessor, specGroupMemory] = await database
+        .insert(specificationGroups)
+        .values([
+            { name: 'Processor', sortOrder: 1 },
+            { name: 'Memory', sortOrder: 2 },
+        ])
+        .returning();
+
+    const [specFieldBrand, specFieldModel, specFieldRam] = await database
+        .insert(specificationFields)
+        .values([
+            { groupId: specGroupProcessor.id, name: 'Processor Brand', sortOrder: 1 },
+            { groupId: specGroupProcessor.id, name: 'Processor Model', sortOrder: 2 },
+            { groupId: specGroupMemory.id, name: 'RAM', sortOrder: 1 },
+        ])
+        .returning();
+
+    await database.insert(productSpecifications).values([
+        { productId: prodPhone.id, fieldId: specFieldBrand.id, value: 'Qualcomm' },
+        { productId: prodPhone.id, fieldId: specFieldModel.id, value: 'Snapdragon 8 Gen 2' },
+        { productId: prodPhone.id, fieldId: specFieldRam.id, value: '12GB LPDDR5X' },
+        
+        { productId: prodPhone2.id, fieldId: specFieldBrand.id, value: 'MediaTek' },
+        { productId: prodPhone2.id, fieldId: specFieldModel.id, value: 'Dimensity 9000' },
+        { productId: prodPhone2.id, fieldId: specFieldRam.id, value: '8GB LPDDR5' },
     ]);
 
     console.log('Dummy data seeded successfully.');

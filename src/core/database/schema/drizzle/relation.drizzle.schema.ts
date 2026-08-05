@@ -22,6 +22,11 @@ import {
   productVariantOptionValues,
   productVariants,
 } from './variant.drizzle.schema';
+import {
+  specificationGroups,
+  specificationFields,
+  productSpecifications,
+} from './specification.drizzle.schema';
 
 export const usersRelations = relations(users, ({ many }) => ({
   sessions: many(sessions),
@@ -105,6 +110,7 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   variants: many(productVariants),
   attributeValues: many(productAttributeValues),
   numericAttributes: many(productNumericAttributes),
+  specifications: many(productSpecifications),
 }));
 
 export const productImagesRelations = relations(productImages, ({ one }) => ({
@@ -231,6 +237,38 @@ export const productVariantAttributeValuesRelations = relations(
     option: one(attributeOptions, {
       fields: [productVariantAttributeValues.attributeOptionId],
       references: [attributeOptions.id],
+    }),
+  }),
+);
+
+export const specificationGroupsRelations = relations(
+  specificationGroups,
+  ({ many }) => ({
+    fields: many(specificationFields),
+  }),
+);
+
+export const specificationFieldsRelations = relations(
+  specificationFields,
+  ({ one, many }) => ({
+    group: one(specificationGroups, {
+      fields: [specificationFields.groupId],
+      references: [specificationGroups.id],
+    }),
+    productSpecifications: many(productSpecifications),
+  }),
+);
+
+export const productSpecificationsRelations = relations(
+  productSpecifications,
+  ({ one }) => ({
+    product: one(products, {
+      fields: [productSpecifications.productId],
+      references: [products.id],
+    }),
+    field: one(specificationFields, {
+      fields: [productSpecifications.fieldId],
+      references: [specificationFields.id],
     }),
   }),
 );

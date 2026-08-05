@@ -168,7 +168,7 @@ export class VariantsRepository {
     });
   }
 
-  findAttributeOptionsByIds(ids: string[]) {
+  findAttributeOptionsByIds(ids: string[]): Promise<typeof schema.attributeOptions.$inferSelect[]> {
     if (ids.length === 0) return Promise.resolve([]);
     return this.db.query.attributeOptions.findMany({
       where: inArray(schema.attributeOptions.id, ids),
@@ -223,7 +223,7 @@ export class VariantsRepository {
         );
       }
 
-      await syncVariableProductCaches(tx as VariantsDatabase, created.productId);
+      await syncVariableProductCaches(tx, created.productId);
 
       return created;
     });
@@ -254,7 +254,7 @@ export class VariantsRepository {
         .returning();
 
       if (updated) {
-        await syncVariableProductCaches(tx as VariantsDatabase, productId);
+        await syncVariableProductCaches(tx, productId);
       }
 
       return updated;
@@ -278,7 +278,7 @@ export class VariantsRepository {
         .returning();
 
       if (deleted) {
-        await syncVariableProductCaches(tx as VariantsDatabase, productId);
+        await syncVariableProductCaches(tx, productId);
       }
 
       return deleted;
