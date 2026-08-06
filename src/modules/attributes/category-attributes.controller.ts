@@ -31,7 +31,10 @@ import {
 export class CategoryAttributesController {
   constructor(private readonly attributesService: AttributesService) {}
 
-  @Get(':categoryId/filters')
+  // UUID-only path so slug-based Catalog `/:slug/filters` can coexist
+  @Get(
+    ':categoryId([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/filters',
+  )
   async getCategoryFilters(
     @Req() request: ExpressRequest,
     @Param('categoryId', ParseUUIDPipe) categoryId: string,

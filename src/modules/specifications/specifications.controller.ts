@@ -56,11 +56,11 @@ export class SpecificationsController {
         @Req() request: ExpressRequest,
         @Body(new ZodValidationPipe(UpsertProductSpecsSchema)) body: UpsertProductSpecsDto,
     ) {
-        await this.specificationsService.upsertProductSpecs(id, body);
+        const specs = await this.specificationsService.upsertProductSpecs(id, body);
         return createApiResponse({
             statusCode: HttpStatus.OK,
             message: 'Product specifications updated successfully',
-            data: null,
+            data: specs,
             path: request.url,
         });
     }

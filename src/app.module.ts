@@ -21,6 +21,7 @@ import { AttributesModule } from './modules/attributes/attributes.module';
 import { ProductsModule } from './modules/products/products.module';
 import { VariantsModule } from './modules/variants/variants.module';
 import { SpecificationsModule } from './modules/specifications/specifications.module';
+import { CatalogModule } from './modules/catalog/catalog.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { SpecificationsModule } from './modules/specifications/specifications.mo
     ProductsModule,
     VariantsModule,
     SpecificationsModule,
+    CatalogModule,
   ],
   controllers: [],
   providers: [
