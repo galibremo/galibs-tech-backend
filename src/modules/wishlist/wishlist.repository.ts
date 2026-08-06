@@ -90,7 +90,7 @@ export class WishlistRepository {
       for (const item of guestWishlist.items) {
         const existing = await tx.query.wishlistItems.findFirst({
           where: and(
-            eq(schema.wishlistItems.wishlistId, userWishlist!.id),
+            eq(schema.wishlistItems.wishlistId, userWishlist.id),
             eq(schema.wishlistItems.productId, item.productId),
             item.variantId
               ? eq(schema.wishlistItems.variantId, item.variantId)
@@ -100,7 +100,7 @@ export class WishlistRepository {
 
         if (!existing) {
           await tx.insert(schema.wishlistItems).values({
-            wishlistId: userWishlist!.id,
+            wishlistId: userWishlist.id,
             productId: item.productId,
             variantId: item.variantId,
           });

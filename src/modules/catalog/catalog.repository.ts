@@ -270,7 +270,7 @@ export class CatalogRepository {
       typeof result === 'object' &&
       result !== null &&
       'rows' in result &&
-      Array.isArray((result as { rows: unknown }).rows)
+      Array.isArray((result).rows)
     ) {
       return (result as { rows: T[] }).rows;
     }

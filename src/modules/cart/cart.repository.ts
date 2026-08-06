@@ -110,7 +110,7 @@ export class CartRepository {
       for (const item of guestCart.items) {
         const existing = await tx.query.cartItems.findFirst({
           where: and(
-            eq(schema.cartItems.cartId, userCart!.id),
+            eq(schema.cartItems.cartId, userCart.id),
             eq(schema.cartItems.productId, item.productId),
             item.variantId
               ? eq(schema.cartItems.variantId, item.variantId)
@@ -128,7 +128,7 @@ export class CartRepository {
             .where(eq(schema.cartItems.id, existing.id));
         } else {
           await tx.insert(schema.cartItems).values({
-            cartId: userCart!.id,
+            cartId: userCart.id,
             productId: item.productId,
             variantId: item.variantId,
             quantity: item.quantity,

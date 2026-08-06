@@ -31,14 +31,36 @@ const AVAILABILITY_QUERY_MAP: Record<string, (typeof STOCK_STATUS_VALUES)[number
 
 const SORT_VALUES = ['default', 'price_asc', 'price_desc'] as const;
 
+function toQueryString(value: unknown): string | null {
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+  return null;
+}
+
 function parseFilterParam(value: unknown): string[] {
   if (value === undefined || value === null || value === '') {
     return [];
   }
   if (Array.isArray(value)) {
-    return value.flatMap((item) => String(item).split(',')).map((item) => item.trim()).filter(Boolean);
+    return value
+      .flatMap((item) => {
+        const asString = toQueryString(item);
+        return asString ? asString.split(',') : [];
+      })
+      .map((item) => item.trim())
+      .filter(Boolean);
   }
-  return String(value)
+
+  const asString = toQueryString(value);
+  if (!asString) {
+    return [];
+  }
+
+  return asString
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
@@ -50,9 +72,16 @@ function parseAvailabilityParam(
   if (value === undefined || value === null || value === '') {
     return [];
   }
+
   const parts = Array.isArray(value)
-    ? value.flatMap((item) => String(item).split(','))
-    : String(value).split(',');
+    ? value.flatMap((item) => {
+        const asString = toQueryString(item);
+        return asString ? asString.split(',') : [];
+      })
+    : (() => {
+        const asString = toQueryString(value);
+        return asString ? asString.split(',') : [];
+      })();
 
   const mapped = parts
     .map((part) => part.trim())
