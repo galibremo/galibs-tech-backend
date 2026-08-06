@@ -22,6 +22,10 @@ import { ProductsModule } from './modules/products/products.module';
 import { VariantsModule } from './modules/variants/variants.module';
 import { SpecificationsModule } from './modules/specifications/specifications.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
+import { CartModule } from './modules/cart/cart.module';
+import { WishlistModule } from './modules/wishlist/wishlist.module';
+import { OrdersModule } from './modules/orders/orders.module';
+import { CommerceModule } from './modules/commerce/commerce.module';
 
 @Module({
   imports: [
@@ -59,6 +63,10 @@ import { CatalogModule } from './modules/catalog/catalog.module';
     VariantsModule,
     SpecificationsModule,
     CatalogModule,
+    CommerceModule,
+    CartModule,
+    WishlistModule,
+    OrdersModule,
   ],
   controllers: [],
   providers: [

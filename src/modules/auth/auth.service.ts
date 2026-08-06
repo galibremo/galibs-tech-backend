@@ -74,6 +74,25 @@ export class AuthService {
     }
   }
 
+  /**
+   * Returns the numeric user id when a valid session exists; otherwise null.
+   */
+  async tryGetSessionUserId(
+    requestHeaders: IncomingHttpHeaders,
+  ): Promise<number | null> {
+    try {
+      const session = await this.betterAuth.api.getSession({
+        headers: fromNodeHeaders(requestHeaders),
+      });
+      if (session?.user?.id == null) {
+        return null;
+      }
+      return Number(session.user.id);
+    } catch {
+      return null;
+    }
+  }
+
   async logout(requestHeaders: IncomingHttpHeaders): Promise<LogoutData> {
     try {
       const { response, headers } = await this.betterAuth.api.signOut({

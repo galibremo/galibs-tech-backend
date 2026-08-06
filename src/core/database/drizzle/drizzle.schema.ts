@@ -4,6 +4,7 @@ import * as AttributeDrizzleSchema from '../schema/drizzle/attribute.drizzle.sch
 import * as AuthDrizzleSchema from '../schema/drizzle/auth.drizzle.schema';
 import * as BrandDrizzleSchema from '../schema/drizzle/brand.drizzle.schema';
 import * as CategoryDrizzleSchema from '../schema/drizzle/category.drizzle.schema';
+import * as CommerceDrizzleSchema from '../schema/drizzle/commerce.drizzle.schema';
 import * as EmailDrizzleSchema from '../schema/drizzle/email.drizzle.schema';
 import * as EnumDrizzleSchema from '../schema/drizzle/enum.drizzle.schema';
 import * as ProductDrizzleSchema from '../schema/drizzle/product.drizzle.schema';
@@ -16,6 +17,7 @@ const schema = {
 	...AuthDrizzleSchema,
 	...BrandDrizzleSchema,
 	...CategoryDrizzleSchema,
+	...CommerceDrizzleSchema,
 	...EmailDrizzleSchema,
 	...EnumDrizzleSchema,
 	...ProductDrizzleSchema,

@@ -21,3 +21,20 @@ export const attributeDataTypeEnum = pgEnum("attribute_data_type", [
     "NUMBER",
     "BOOLEAN",
 ]);
+
+export const cartStatusEnum = pgEnum('cart_status', ['ACTIVE', 'CONVERTED']);
+
+export const orderStatusEnum = pgEnum('order_status', [
+  'PENDING',
+  'CONFIRMED',
+  'CANCELLED',
+  'COMPLETED',
+]);
+
+export const paymentMethodEnum = pgEnum('payment_method', ['COD']);
+
+export const paymentStatusEnum = pgEnum('payment_status', [
+  'PENDING',
+  'PAID',
+  'CANCELLED',
+]);
