@@ -250,9 +250,9 @@ GET /categories/laptops/products?page=1&limit=20&sort=price_asc&filter=uuid1,uui
 
 ## Category attributes
 
-`:categoryId` must be a **UUID** so these routes coexist with `/:slug/filters`.
+Use the static `id/` segment so this UUID route coexists with `/:slug/filters`.
 
-### `GET /categories/:categoryId/filters`
+### `GET /categories/id/:categoryId/filters`
 
 **Auth:** Public · **Status:** 200
 

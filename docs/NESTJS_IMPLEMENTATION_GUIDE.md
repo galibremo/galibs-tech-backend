@@ -378,7 +378,7 @@ src/attributes/
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `POST` | `/categories/:categoryId/attributes` | Assign filter group to category |
-| `GET` | `/categories/:categoryId/filters` | Sidebar definition for that category |
+| `GET` | `/categories/id/:categoryId/filters` | Sidebar definition for that category |
 | `PATCH` | `/categories/:categoryId/attributes/:attributeId` | Change sort order |
 
 ## Seed example (Laptop)
@@ -409,7 +409,7 @@ For `brand` options:
 - [ ] Create attribute `ram_size`  
 - [ ] Add options 8/16/32 GB  
 - [ ] Assign attributes to laptop category  
-- [ ] `GET /categories/:id/filters` returns groups + options like StarTech sidebar
+- [ ] `GET /categories/id/:id/filters` returns groups + options like StarTech sidebar
 
 ---
 
