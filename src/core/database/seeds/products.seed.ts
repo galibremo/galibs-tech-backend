@@ -1,0 +1,1575 @@
+import {
+    productAttributeValues,
+} from '../schema/drizzle/attribute.drizzle.schema';
+import {
+    products,
+    productCategories,
+} from '../schema/drizzle/product.drizzle.schema';
+import type {
+    AttrOptionRow,
+    BrandRow,
+    CategoryRow,
+    SeedDatabase,
+    StockStatus,
+} from './seed-helpers';
+import {
+    requireBrand,
+    requireCategory,
+    requireOption,
+    seedVariantMatrix,
+} from './seed-helpers';
+
+type ProductSeed = {
+    type: 'SIMPLE' | 'VARIABLE';
+    productCode: string;
+    name: string;
+    slug: string;
+    brandSlug: string;
+    categorySlug: string;
+    price: number;
+    maxPrice?: number;
+    regularPrice?: number;
+    stockQty: number;
+    availability?: StockStatus;
+    earnPoints: number;
+    keyFeatures?: string[];
+    shortDescription?: string;
+    badges?: string[];
+    optionSlugs: string[];
+    extraCategorySlugs?: string[];
+};
+
+async function insertCatalogProducts(
+    database: SeedDatabase,
+    brands: Map<string, BrandRow>,
+    categories: Map<string, CategoryRow>,
+    options: Map<string, AttrOptionRow>,
+    seeds: ProductSeed[],
+): Promise<Map<string, { id: string; name: string; productCode: string }>> {
+    const inserted = await database
+        .insert(products)
+        .values(
+            seeds.map((seed) => {
+                const brand = requireBrand(brands, seed.brandSlug);
+                const category = requireCategory(categories, seed.categorySlug);
+                return {
+                    type: seed.type,
+                    productCode: seed.productCode,
+                    name: seed.name,
+                    slug: seed.slug,
+                    brandId: brand.id,
+                    primaryCategoryId: category.id,
+                    price: seed.price,
+                    maxPrice: seed.maxPrice ?? null,
+                    regularPrice: seed.regularPrice ?? null,
+                    stockQty: seed.stockQty,
+                    availability: seed.availability ?? 'IN_STOCK',
+                    earnPoints: seed.earnPoints,
+                    keyFeatures: seed.keyFeatures ?? [],
+                    shortDescription: seed.shortDescription ?? null,
+                    badges: seed.badges ?? [],
+                    searchDocument: [
+                        seed.name,
+                        seed.productCode,
+                        seed.shortDescription ?? '',
+                        ...(seed.keyFeatures ?? []),
+                    ]
+                        .join(' ')
+                        .toLowerCase(),
+                };
+            }),
+        )
+        .returning();
+
+    const byCode = new Map(
+        inserted.map((product) => [
+            product.productCode,
+            {
+                id: product.id,
+                name: product.name,
+                productCode: product.productCode,
+            },
+        ]),
+    );
+
+    const categoryLinks: Array<{
+        productId: string;
+        categoryId: string;
+        isPrimary: boolean;
+    }> = [];
+    const attributeLinks: Array<{
+        productId: string;
+        attributeId: string;
+        attributeOptionId: string;
+    }> = [];
+
+    for (const seed of seeds) {
+        const product = byCode.get(seed.productCode);
+        if (!product) {
+            throw new Error(`Product missing after insert: ${seed.productCode}`);
+        }
+        const primary = requireCategory(categories, seed.categorySlug);
+        categoryLinks.push({
+            productId: product.id,
+            categoryId: primary.id,
+            isPrimary: true,
+        });
+        for (const extraSlug of seed.extraCategorySlugs ?? []) {
+            const extra = requireCategory(categories, extraSlug);
+            categoryLinks.push({
+                productId: product.id,
+                categoryId: extra.id,
+                isPrimary: false,
+            });
+        }
+
+        const brandOption = requireOption(options, `brand-${seed.brandSlug}`);
+        attributeLinks.push({
+            productId: product.id,
+            attributeId: brandOption.attributeId,
+            attributeOptionId: brandOption.id,
+        });
+
+        for (const optionSlug of seed.optionSlugs) {
+            const option = requireOption(options, optionSlug);
+            attributeLinks.push({
+                productId: product.id,
+                attributeId: option.attributeId,
+                attributeOptionId: option.id,
+            });
+        }
+    }
+
+    await database.insert(productCategories).values(categoryLinks);
+    await database.insert(productAttributeValues).values(attributeLinks);
+
+    return byCode;
+}
+
+/**
+ * Seeds all catalog products (max 10 per domain).
+ * Domains: Desktop 8, Laptop 10, Component 10, Monitor 8, UPS 5,
+ * Phone 10, Tablet 5, Accessories/Gadget 10.
+ */
+export async function seedProducts(
+    database: SeedDatabase,
+    brands: Map<string, BrandRow>,
+    categories: Map<string, CategoryRow>,
+    options: Map<string, AttrOptionRow>,
+): Promise<Map<string, { id: string; name: string; productCode: string }>> {
+    const opt = (slug: string) => requireOption(options, slug);
+
+    // -------------------------------------------------------------------------
+    // Desktops (8)
+    // -------------------------------------------------------------------------
+    const desktopSeeds: ProductSeed[] = [
+        {
+            type: 'VARIABLE',
+            productCode: 'DT-GM-001',
+            name: 'MSI Intel Gaming Tower',
+            slug: 'msi-intel-gaming-tower',
+            brandSlug: 'msi',
+            categorySlug: 'intel-gaming-pc',
+            price: 129900,
+            maxPrice: 159900,
+            stockQty: 20,
+            earnPoints: 130,
+            badges: ['Best Seller'],
+            shortDescription: 'Gaming desktop — choose RAM and Storage.',
+            keyFeatures: ['RTX 4060', 'RGB case', 'Liquid cooler'],
+            optionSlugs: [
+                'cpu-intel',
+                'ram-16gb',
+                'ram-32gb',
+                'storage-512gb',
+                'storage-1tb',
+            ],
+        },
+        {
+            type: 'VARIABLE',
+            productCode: 'DT-GM-002',
+            name: 'ASUS AMD Gaming Rig',
+            slug: 'asus-amd-gaming-rig',
+            brandSlug: 'asus',
+            categorySlug: 'amd-gaming-pc',
+            price: 119900,
+            maxPrice: 149900,
+            stockQty: 18,
+            earnPoints: 120,
+            optionSlugs: [
+                'cpu-amd',
+                'ram-16gb',
+                'ram-32gb',
+                'storage-512gb',
+                'storage-1tb',
+            ],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'DT-BR-001',
+            name: 'HP Pavilion Desktop',
+            slug: 'hp-pavilion-desktop',
+            brandSlug: 'hp',
+            categorySlug: 'brand-pc',
+            price: 69900,
+            stockQty: 25,
+            earnPoints: 70,
+            optionSlugs: ['cpu-intel', 'ram-8gb', 'storage-512gb'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'DT-BR-002',
+            name: 'Dell Inspiron Tower',
+            slug: 'dell-inspiron-tower',
+            brandSlug: 'dell',
+            categorySlug: 'brand-pc',
+            price: 74900,
+            stockQty: 22,
+            earnPoints: 75,
+            optionSlugs: ['cpu-intel', 'ram-16gb', 'storage-512gb'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'DT-BR-003',
+            name: 'Lenovo IdeaCentre',
+            slug: 'lenovo-ideacentre',
+            brandSlug: 'lenovo',
+            categorySlug: 'brand-pc',
+            price: 64900,
+            stockQty: 30,
+            availability: 'LOW_STOCK',
+            earnPoints: 65,
+            optionSlugs: ['cpu-amd', 'ram-8gb', 'storage-256gb'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'DT-AIO-001',
+            name: 'HP All-in-One 24',
+            slug: 'hp-all-in-one-24',
+            brandSlug: 'hp',
+            categorySlug: 'all-in-one-pc',
+            price: 89900,
+            stockQty: 12,
+            earnPoints: 90,
+            optionSlugs: ['cpu-intel', 'ram-16gb', 'display-24'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'DT-AIO-002',
+            name: 'Dell OptiPlex AIO',
+            slug: 'dell-optiplex-aio',
+            brandSlug: 'dell',
+            categorySlug: 'all-in-one-pc',
+            price: 99900,
+            stockQty: 10,
+            earnPoints: 100,
+            optionSlugs: ['cpu-intel', 'ram-16gb', 'display-27'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'DT-BR-004',
+            name: 'Acer Aspire Desktop',
+            slug: 'acer-aspire-desktop',
+            brandSlug: 'acer',
+            categorySlug: 'brand-pc',
+            price: 54900,
+            stockQty: 0,
+            availability: 'OUT_OF_STOCK',
+            earnPoints: 55,
+            optionSlugs: ['cpu-intel', 'ram-8gb', 'storage-256gb'],
+        },
+    ];
+
+    // -------------------------------------------------------------------------
+    // Laptops (10)
+    // -------------------------------------------------------------------------
+    const laptopSeeds: ProductSeed[] = [
+        {
+            type: 'VARIABLE',
+            productCode: 'LP-GM-001',
+            name: 'ASUS TUF Gaming A15',
+            slug: 'asus-tuf-gaming-a15',
+            brandSlug: 'asus',
+            categorySlug: 'gaming-laptop',
+            price: 109900,
+            maxPrice: 134900,
+            stockQty: 28,
+            earnPoints: 110,
+            badges: ['Gaming'],
+            shortDescription: 'Gaming laptop — pick Color and RAM.',
+            optionSlugs: [
+                'series-gaming',
+                'cpu-amd',
+                'color-black',
+                'color-silver',
+                'ram-16gb',
+                'ram-32gb',
+                'storage-512gb',
+                'display-156',
+            ],
+        },
+        {
+            type: 'VARIABLE',
+            productCode: 'LP-UB-001',
+            name: 'Dell XPS 14',
+            slug: 'dell-xps-14',
+            brandSlug: 'dell',
+            categorySlug: 'ultrabook',
+            price: 149900,
+            maxPrice: 179900,
+            stockQty: 15,
+            earnPoints: 150,
+            shortDescription: 'Ultrabook — configure RAM and SSD.',
+            optionSlugs: [
+                'series-ultrabook',
+                'cpu-intel',
+                'ram-16gb',
+                'ram-32gb',
+                'storage-512gb',
+                'storage-1tb',
+                'display-14',
+                'color-silver',
+            ],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'LP-GM-002',
+            name: 'MSI Katana 15',
+            slug: 'msi-katana-15',
+            brandSlug: 'msi',
+            categorySlug: 'gaming-laptop',
+            price: 124900,
+            stockQty: 14,
+            earnPoints: 125,
+            optionSlugs: [
+                'series-gaming',
+                'cpu-intel',
+                'ram-16gb',
+                'storage-1tb',
+                'display-156',
+                'color-black',
+            ],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'LP-GM-003',
+            name: 'Lenovo Legion 5',
+            slug: 'lenovo-legion-5',
+            brandSlug: 'lenovo',
+            categorySlug: 'gaming-laptop',
+            price: 134900,
+            stockQty: 11,
+            earnPoints: 135,
+            optionSlugs: [
+                'series-gaming',
+                'cpu-amd',
+                'ram-32gb',
+                'storage-1tb',
+                'display-16',
+                'color-black',
+            ],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'LP-UB-002',
+            name: 'HP Spectre x360',
+            slug: 'hp-spectre-x360',
+            brandSlug: 'hp',
+            categorySlug: 'ultrabook',
+            price: 139900,
+            stockQty: 9,
+            earnPoints: 140,
+            optionSlugs: [
+                'series-ultrabook',
+                'cpu-intel',
+                'ram-16gb',
+                'storage-512gb',
+                'display-14',
+                'color-silver',
+            ],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'LP-UB-003',
+            name: 'Apple MacBook Air M3',
+            slug: 'apple-macbook-air-m3',
+            brandSlug: 'apple',
+            categorySlug: 'ultrabook',
+            price: 129900,
+            stockQty: 20,
+            earnPoints: 130,
+            optionSlugs: [
+                'series-ultrabook',
+                'cpu-apple',
+                'ram-16gb',
+                'storage-512gb',
+                'display-14',
+                'color-silver',
+            ],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'LP-CN-001',
+            name: 'Acer Aspire 5',
+            slug: 'acer-aspire-5',
+            brandSlug: 'acer',
+            categorySlug: 'laptop-notebook',
+            price: 59900,
+            stockQty: 40,
+            earnPoints: 60,
+            optionSlugs: [
+                'series-consumer',
+                'cpu-intel',
+                'ram-8gb',
+                'storage-512gb',
+                'display-156',
+            ],
+            extraCategorySlugs: ['ultrabook'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'LP-BZ-001',
+            name: 'Lenovo ThinkPad E14',
+            slug: 'lenovo-thinkpad-e14',
+            brandSlug: 'lenovo',
+            categorySlug: 'laptop-notebook',
+            price: 84900,
+            stockQty: 18,
+            earnPoints: 85,
+            optionSlugs: [
+                'series-business',
+                'cpu-intel',
+                'ram-16gb',
+                'storage-512gb',
+                'display-14',
+            ],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'LP-BZ-002',
+            name: 'HP ProBook 450',
+            slug: 'hp-probook-450',
+            brandSlug: 'hp',
+            categorySlug: 'laptop-notebook',
+            price: 79900,
+            stockQty: 16,
+            availability: 'PRE_ORDER',
+            earnPoints: 80,
+            optionSlugs: [
+                'series-business',
+                'cpu-intel',
+                'ram-8gb',
+                'storage-256gb',
+                'display-156',
+            ],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'LP-CN-002',
+            name: 'Dell Vostro 15',
+            slug: 'dell-vostro-15',
+            brandSlug: 'dell',
+            categorySlug: 'laptop-notebook',
+            price: 67900,
+            stockQty: 5,
+            availability: 'UPCOMING',
+            earnPoints: 68,
+            badges: ['Upcoming'],
+            optionSlugs: [
+                'series-consumer',
+                'cpu-amd',
+                'ram-8gb',
+                'storage-512gb',
+                'display-156',
+            ],
+        },
+    ];
+
+    // -------------------------------------------------------------------------
+    // Components (10)
+    // -------------------------------------------------------------------------
+    const componentSeeds: ProductSeed[] = [
+        {
+            type: 'SIMPLE',
+            productCode: 'CP-CPU-001',
+            name: 'Intel Core i5-14400F',
+            slug: 'intel-core-i5-14400f',
+            brandSlug: 'intel',
+            categorySlug: 'processor',
+            price: 24900,
+            stockQty: 50,
+            earnPoints: 25,
+            optionSlugs: ['cpu-intel', 'socket-lga1700'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'CP-CPU-002',
+            name: 'AMD Ryzen 7 7700',
+            slug: 'amd-ryzen-7-7700',
+            brandSlug: 'amd',
+            categorySlug: 'processor',
+            price: 34900,
+            stockQty: 35,
+            earnPoints: 35,
+            optionSlugs: ['cpu-amd', 'socket-am5'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'CP-MB-001',
+            name: 'ASUS Prime B760M',
+            slug: 'asus-prime-b760m',
+            brandSlug: 'asus',
+            categorySlug: 'motherboard',
+            price: 18900,
+            stockQty: 40,
+            earnPoints: 19,
+            optionSlugs: ['socket-lga1700'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'CP-MB-002',
+            name: 'Gigabyte B650M DS3H',
+            slug: 'gigabyte-b650m-ds3h',
+            brandSlug: 'gigabyte',
+            categorySlug: 'motherboard',
+            price: 19900,
+            stockQty: 32,
+            earnPoints: 20,
+            optionSlugs: ['socket-am5'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'CP-GPU-001',
+            name: 'MSI RTX 4060 Ventus',
+            slug: 'msi-rtx-4060-ventus',
+            brandSlug: 'msi',
+            categorySlug: 'graphics-card',
+            price: 44900,
+            stockQty: 20,
+            earnPoints: 45,
+            optionSlugs: ['gpu-rtx4060'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'CP-GPU-002',
+            name: 'Gigabyte RTX 4070 Windforce',
+            slug: 'gigabyte-rtx-4070-windforce',
+            brandSlug: 'gigabyte',
+            categorySlug: 'graphics-card',
+            price: 74900,
+            stockQty: 12,
+            earnPoints: 75,
+            optionSlugs: ['gpu-rtx4070'],
+        },
+        {
+            type: 'VARIABLE',
+            productCode: 'CP-RAM-001',
+            name: 'Corsair Vengeance RGB Kit',
+            slug: 'corsair-vengeance-rgb-kit',
+            brandSlug: 'corsair',
+            categorySlug: 'ram-desktop',
+            price: 12900,
+            maxPrice: 18900,
+            stockQty: 45,
+            earnPoints: 13,
+            shortDescription: 'Desktop RAM — choose Color and Capacity.',
+            optionSlugs: [
+                'color-black',
+                'color-white',
+                'ram-16gb',
+                'ram-32gb',
+            ],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'CP-PSU-001',
+            name: 'Corsair CX650',
+            slug: 'corsair-cx650',
+            brandSlug: 'corsair',
+            categorySlug: 'power-supply',
+            price: 8900,
+            stockQty: 60,
+            earnPoints: 9,
+            optionSlugs: ['watt-650'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'CP-PSU-002',
+            name: 'MSI MAG A750GL',
+            slug: 'msi-mag-a750gl',
+            brandSlug: 'msi',
+            categorySlug: 'power-supply',
+            price: 12900,
+            stockQty: 28,
+            earnPoints: 13,
+            optionSlugs: ['watt-750'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'CP-SSD-001',
+            name: 'Samsung 990 EVO 1TB',
+            slug: 'samsung-990-evo-1tb',
+            brandSlug: 'samsung',
+            categorySlug: 'ssd',
+            price: 11900,
+            stockQty: 70,
+            earnPoints: 12,
+            optionSlugs: ['storage-1tb'],
+        },
+    ];
+
+    // -------------------------------------------------------------------------
+    // Monitors (8)
+    // -------------------------------------------------------------------------
+    const monitorSeeds: ProductSeed[] = [
+        {
+            type: 'SIMPLE',
+            productCode: 'MN-001',
+            name: 'ASUS VA24EHF 24"',
+            slug: 'asus-va24ehf-24',
+            brandSlug: 'asus',
+            categorySlug: 'monitor',
+            price: 14900,
+            stockQty: 40,
+            earnPoints: 15,
+            optionSlugs: ['display-24', 'refresh-75', 'panel-ips'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'MN-002',
+            name: 'MSI G274F 27" 180Hz',
+            slug: 'msi-g274f-27',
+            brandSlug: 'msi',
+            categorySlug: 'monitor',
+            price: 28900,
+            stockQty: 22,
+            earnPoints: 29,
+            optionSlugs: ['display-27', 'refresh-165', 'panel-ips'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'MN-003',
+            name: 'Dell S2721HS 27"',
+            slug: 'dell-s2721hs-27',
+            brandSlug: 'dell',
+            categorySlug: 'monitor',
+            price: 24900,
+            stockQty: 18,
+            earnPoints: 25,
+            optionSlugs: ['display-27', 'refresh-75', 'panel-ips'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'MN-004',
+            name: 'Samsung Odyssey G5 32"',
+            slug: 'samsung-odyssey-g5-32',
+            brandSlug: 'samsung',
+            categorySlug: 'monitor',
+            price: 39900,
+            stockQty: 14,
+            earnPoints: 40,
+            optionSlugs: ['display-32', 'refresh-165', 'panel-va'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'MN-005',
+            name: 'Acer Nitro KG241Y 24" 144Hz',
+            slug: 'acer-nitro-kg241y-24',
+            brandSlug: 'acer',
+            categorySlug: 'monitor',
+            price: 21900,
+            stockQty: 25,
+            earnPoints: 22,
+            optionSlugs: ['display-24', 'refresh-144', 'panel-ips'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'MN-006',
+            name: 'Gigabyte G27F 27"',
+            slug: 'gigabyte-g27f-27',
+            brandSlug: 'gigabyte',
+            categorySlug: 'monitor',
+            price: 26900,
+            stockQty: 16,
+            earnPoints: 27,
+            optionSlugs: ['display-27', 'refresh-144', 'panel-ips'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'MN-007',
+            name: 'HP M24f 24"',
+            slug: 'hp-m24f-24',
+            brandSlug: 'hp',
+            categorySlug: 'monitor',
+            price: 13900,
+            stockQty: 0,
+            availability: 'OUT_OF_STOCK',
+            earnPoints: 14,
+            optionSlugs: ['display-24', 'refresh-75', 'panel-ips'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'MN-008',
+            name: 'ASUS ROG Swift 27" OLED',
+            slug: 'asus-rog-swift-27-oled',
+            brandSlug: 'asus',
+            categorySlug: 'monitor',
+            price: 89900,
+            stockQty: 6,
+            availability: 'PRE_ORDER',
+            earnPoints: 90,
+            optionSlugs: ['display-27', 'refresh-240', 'panel-oled'],
+        },
+    ];
+
+    // -------------------------------------------------------------------------
+    // UPS (5)
+    // -------------------------------------------------------------------------
+    const upsSeeds: ProductSeed[] = [
+        {
+            type: 'SIMPLE',
+            productCode: 'UP-001',
+            name: 'VoltGear Line Interactive 1000VA',
+            slug: 'voltgear-ups-1000va',
+            brandSlug: 'voltgear',
+            categorySlug: 'ups',
+            price: 7900,
+            stockQty: 80,
+            earnPoints: 8,
+            optionSlugs: ['watt-1000va'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'UP-002',
+            name: 'VoltGear Pro 1500VA',
+            slug: 'voltgear-ups-1500va',
+            brandSlug: 'voltgear',
+            categorySlug: 'ups',
+            price: 11900,
+            stockQty: 45,
+            earnPoints: 12,
+            optionSlugs: ['watt-1500va'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'UP-003',
+            name: 'APC Back-UPS 1000VA Clone',
+            slug: 'voltgear-backup-1000va',
+            brandSlug: 'voltgear',
+            categorySlug: 'ups',
+            price: 9900,
+            stockQty: 35,
+            earnPoints: 10,
+            optionSlugs: ['watt-1000va'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'UP-004',
+            name: 'TechCorp Office UPS 1500VA',
+            slug: 'techcorp-office-ups-1500va',
+            brandSlug: 'techcorp',
+            categorySlug: 'ups',
+            price: 10900,
+            stockQty: 20,
+            earnPoints: 11,
+            optionSlugs: ['watt-1500va'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'UP-005',
+            name: 'VoltGear Mini 650VA',
+            slug: 'voltgear-mini-650va',
+            brandSlug: 'voltgear',
+            categorySlug: 'ups',
+            price: 4900,
+            stockQty: 100,
+            earnPoints: 5,
+            optionSlugs: ['watt-650'],
+        },
+    ];
+
+    // -------------------------------------------------------------------------
+    // Phones (10)
+    // -------------------------------------------------------------------------
+    const phoneSeeds: ProductSeed[] = [
+        {
+            type: 'VARIABLE',
+            productCode: 'PH-001',
+            name: 'TechCorp ProPhone',
+            slug: 'techcorp-prophone',
+            brandSlug: 'techcorp',
+            categorySlug: 'mobile-phone',
+            price: 99900,
+            maxPrice: 129900,
+            stockQty: 40,
+            earnPoints: 100,
+            badges: ['Best Seller'],
+            shortDescription: 'Flagship phone — pick Color and RAM.',
+            optionSlugs: [
+                'color-black',
+                'color-blue',
+                'color-titanium',
+                'ram-8gb',
+                'ram-16gb',
+                'storage-256gb',
+            ],
+        },
+        {
+            type: 'VARIABLE',
+            productCode: 'PH-002',
+            name: 'TechCorp LitePhone',
+            slug: 'techcorp-litephone',
+            brandSlug: 'techcorp',
+            categorySlug: 'mobile-phone',
+            price: 29900,
+            maxPrice: 34900,
+            stockQty: 50,
+            earnPoints: 30,
+            shortDescription: 'Budget phone with Color × RAM options.',
+            optionSlugs: [
+                'color-black',
+                'color-blue',
+                'ram-4gb',
+                'ram-8gb',
+                'storage-128gb',
+            ],
+        },
+        {
+            type: 'VARIABLE',
+            productCode: 'PH-003',
+            name: 'Samsung Galaxy S Flagship',
+            slug: 'samsung-galaxy-s-flagship',
+            brandSlug: 'samsung',
+            categorySlug: 'mobile-phone',
+            price: 119900,
+            maxPrice: 149900,
+            stockQty: 22,
+            earnPoints: 120,
+            shortDescription: 'Sparse Color × Storage × RAM matrix.',
+            optionSlugs: [
+                'color-black',
+                'color-titanium',
+                'storage-256gb',
+                'storage-512gb',
+                'ram-8gb',
+                'ram-16gb',
+            ],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'PH-004',
+            name: 'Apple iPhone 15',
+            slug: 'apple-iphone-15',
+            brandSlug: 'apple',
+            categorySlug: 'mobile-phone',
+            price: 109900,
+            stockQty: 25,
+            earnPoints: 110,
+            optionSlugs: ['color-blue', 'ram-8gb', 'storage-256gb'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'PH-005',
+            name: 'Samsung Galaxy A35',
+            slug: 'samsung-galaxy-a35',
+            brandSlug: 'samsung',
+            categorySlug: 'mobile-phone',
+            price: 39900,
+            stockQty: 60,
+            earnPoints: 40,
+            optionSlugs: ['color-black', 'ram-8gb', 'storage-128gb'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'PH-006',
+            name: 'TechCorp CityPhone',
+            slug: 'techcorp-cityphone',
+            brandSlug: 'techcorp',
+            categorySlug: 'mobile-phone',
+            price: 15900,
+            stockQty: 80,
+            earnPoints: 16,
+            optionSlugs: ['color-black', 'ram-4gb', 'storage-128gb'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'PH-007',
+            name: 'Samsung Galaxy M15',
+            slug: 'samsung-galaxy-m15',
+            brandSlug: 'samsung',
+            categorySlug: 'mobile-phone',
+            price: 19900,
+            stockQty: 0,
+            availability: 'OUT_OF_STOCK',
+            earnPoints: 20,
+            optionSlugs: ['color-blue', 'ram-4gb', 'storage-128gb'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'PH-008',
+            name: 'Apple iPhone SE',
+            slug: 'apple-iphone-se',
+            brandSlug: 'apple',
+            categorySlug: 'mobile-phone',
+            price: 64900,
+            stockQty: 15,
+            availability: 'LOW_STOCK',
+            earnPoints: 65,
+            optionSlugs: ['color-red', 'ram-4gb', 'storage-128gb'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'PH-009',
+            name: 'TechCorp WorkPhone',
+            slug: 'techcorp-workphone',
+            brandSlug: 'techcorp',
+            categorySlug: 'mobile-phone',
+            price: 49900,
+            regularPrice: 54900,
+            stockQty: 28,
+            earnPoints: 50,
+            optionSlugs: ['color-titanium', 'ram-8gb', 'storage-256gb'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'PH-010',
+            name: 'Samsung Fold Preview',
+            slug: 'samsung-fold-preview',
+            brandSlug: 'samsung',
+            categorySlug: 'mobile-phone',
+            price: 189900,
+            stockQty: 4,
+            availability: 'UPCOMING',
+            earnPoints: 190,
+            badges: ['Upcoming'],
+            optionSlugs: ['color-titanium', 'ram-16gb', 'storage-512gb'],
+        },
+    ];
+
+    // -------------------------------------------------------------------------
+    // Tablets (5)
+    // -------------------------------------------------------------------------
+    const tabletSeeds: ProductSeed[] = [
+        {
+            type: 'VARIABLE',
+            productCode: 'TB-001',
+            name: 'Samsung Galaxy Tab S9 FE',
+            slug: 'samsung-galaxy-tab-s9-fe',
+            brandSlug: 'samsung',
+            categorySlug: 'tablet-pc',
+            price: 44900,
+            maxPrice: 54900,
+            stockQty: 24,
+            earnPoints: 45,
+            shortDescription: 'Tablet — pick Color and Storage.',
+            optionSlugs: [
+                'color-silver',
+                'color-black',
+                'storage-128gb',
+                'storage-256gb',
+                'ram-8gb',
+                'display-14',
+            ],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'TB-002',
+            name: 'Apple iPad 10th Gen',
+            slug: 'apple-ipad-10th-gen',
+            brandSlug: 'apple',
+            categorySlug: 'tablet-pc',
+            price: 54900,
+            stockQty: 20,
+            earnPoints: 55,
+            optionSlugs: ['color-blue', 'ram-8gb', 'storage-256gb', 'display-14'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'TB-003',
+            name: 'TechCorp Tab 11',
+            slug: 'techcorp-tab-11',
+            brandSlug: 'techcorp',
+            categorySlug: 'tablet-pc',
+            price: 29900,
+            stockQty: 30,
+            earnPoints: 30,
+            optionSlugs: ['color-black', 'ram-4gb', 'storage-128gb', 'display-14'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'TB-004',
+            name: 'Lenovo Tab M10',
+            slug: 'lenovo-tab-m10',
+            brandSlug: 'lenovo',
+            categorySlug: 'tablet-pc',
+            price: 18900,
+            stockQty: 35,
+            earnPoints: 19,
+            optionSlugs: ['color-silver', 'ram-4gb', 'storage-128gb', 'display-14'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'TB-005',
+            name: 'Samsung Galaxy Tab A9',
+            slug: 'samsung-galaxy-tab-a9',
+            brandSlug: 'samsung',
+            categorySlug: 'tablet-pc',
+            price: 22900,
+            stockQty: 40,
+            earnPoints: 23,
+            optionSlugs: ['color-black', 'ram-4gb', 'storage-128gb', 'display-14'],
+        },
+    ];
+
+    // -------------------------------------------------------------------------
+    // Accessories / Gadget (10)
+    // -------------------------------------------------------------------------
+    const accessorySeeds: ProductSeed[] = [
+        {
+            type: 'SIMPLE',
+            productCode: 'AC-CH-001',
+            name: 'VoltGear 65W GaN Charger',
+            slug: 'voltgear-65w-gan',
+            brandSlug: 'voltgear',
+            categorySlug: 'chargers',
+            price: 3900,
+            stockQty: 200,
+            earnPoints: 4,
+            optionSlugs: ['color-white'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'AC-CH-002',
+            name: 'TechCorp PowerBrick 100W',
+            slug: 'techcorp-powerbrick-100w',
+            brandSlug: 'techcorp',
+            categorySlug: 'chargers',
+            price: 5900,
+            stockQty: 80,
+            earnPoints: 6,
+            optionSlugs: ['color-black'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'AC-BG-001',
+            name: 'ASUS Laptop Backpack',
+            slug: 'asus-laptop-backpack',
+            brandSlug: 'asus',
+            categorySlug: 'laptop-bag',
+            price: 2900,
+            stockQty: 90,
+            earnPoints: 3,
+            optionSlugs: ['color-black'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'AC-BG-002',
+            name: 'HP Prelude Bag',
+            slug: 'hp-prelude-bag',
+            brandSlug: 'hp',
+            categorySlug: 'laptop-bag',
+            price: 1900,
+            stockQty: 110,
+            earnPoints: 2,
+            optionSlugs: ['color-silver'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'GD-HP-001',
+            name: 'SoundMax OverEar',
+            slug: 'soundmax-overear',
+            brandSlug: 'soundmax',
+            categorySlug: 'headphones',
+            price: 9900,
+            stockQty: 50,
+            earnPoints: 10,
+            optionSlugs: ['color-black'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'GD-HP-002',
+            name: 'SoundMax Studio Pro',
+            slug: 'soundmax-studio-pro',
+            brandSlug: 'soundmax',
+            categorySlug: 'headphones',
+            price: 14900,
+            stockQty: 30,
+            earnPoints: 15,
+            optionSlugs: ['color-titanium'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'GD-HP-003',
+            name: 'Corsair HS65 Surround',
+            slug: 'corsair-hs65-surround',
+            brandSlug: 'corsair',
+            categorySlug: 'headphones',
+            price: 7900,
+            stockQty: 40,
+            earnPoints: 8,
+            optionSlugs: ['color-white'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'GD-EB-001',
+            name: 'SoundMax EarBuds',
+            slug: 'soundmax-earbuds',
+            brandSlug: 'soundmax',
+            categorySlug: 'earbuds',
+            price: 4900,
+            stockQty: 120,
+            earnPoints: 5,
+            optionSlugs: ['color-white'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'GD-EB-002',
+            name: 'Samsung Galaxy Buds FE',
+            slug: 'samsung-galaxy-buds-fe',
+            brandSlug: 'samsung',
+            categorySlug: 'earbuds',
+            price: 6900,
+            stockQty: 70,
+            earnPoints: 7,
+            optionSlugs: ['color-black'],
+        },
+        {
+            type: 'SIMPLE',
+            productCode: 'GD-EB-003',
+            name: 'Apple AirPods Style Buds',
+            slug: 'apple-airpods-style-buds',
+            brandSlug: 'apple',
+            categorySlug: 'earbuds',
+            price: 12900,
+            stockQty: 0,
+            availability: 'OUT_OF_STOCK',
+            earnPoints: 13,
+            optionSlugs: ['color-white'],
+        },
+    ];
+
+    const allSeeds = [
+        ...desktopSeeds,
+        ...laptopSeeds,
+        ...componentSeeds,
+        ...monitorSeeds,
+        ...upsSeeds,
+        ...phoneSeeds,
+        ...tabletSeeds,
+        ...accessorySeeds,
+    ];
+
+    if (desktopSeeds.length > 10) throw new Error('Desktops exceed domain limit 10');
+    if (laptopSeeds.length > 10) throw new Error('Laptops exceed domain limit 10');
+    if (componentSeeds.length > 10) throw new Error('Components exceed domain limit 10');
+    if (monitorSeeds.length > 10) throw new Error('Monitors exceed domain limit 10');
+    if (upsSeeds.length > 10) throw new Error('UPS exceed domain limit 10');
+    if (phoneSeeds.length > 10) throw new Error('Phones exceed domain limit 10');
+    if (tabletSeeds.length > 10) throw new Error('Tablets exceed domain limit 10');
+    if (accessorySeeds.length > 10) {
+        throw new Error('Accessories/Gadget exceed domain limit 10');
+    }
+
+    const byCode = await insertCatalogProducts(
+        database,
+        brands,
+        categories,
+        options,
+        allSeeds,
+    );
+
+    // ----- VARIABLE matrices -----
+
+    const intelTower = byCode.get('DT-GM-001')!;
+    await seedVariantMatrix(
+        database,
+        intelTower,
+        [
+            {
+                code: 'ram',
+                name: 'RAM',
+                sortOrder: 1,
+                values: [
+                    { label: '16GB', slug: 'opt-ram-16gb', attributeOption: opt('ram-16gb') },
+                    { label: '32GB', slug: 'opt-ram-32gb', attributeOption: opt('ram-32gb') },
+                ],
+            },
+            {
+                code: 'storage',
+                name: 'Storage',
+                sortOrder: 2,
+                values: [
+                    {
+                        label: '512GB',
+                        slug: 'opt-storage-512gb',
+                        attributeOption: opt('storage-512gb'),
+                    },
+                    {
+                        label: '1TB',
+                        slug: 'opt-storage-1tb',
+                        attributeOption: opt('storage-1tb'),
+                    },
+                ],
+            },
+        ],
+        [
+            { valueSlugs: ['opt-ram-16gb', 'opt-storage-512gb'], price: 129900, stockQty: 6, isDefault: true },
+            { valueSlugs: ['opt-ram-16gb', 'opt-storage-1tb'], price: 139900, stockQty: 5 },
+            { valueSlugs: ['opt-ram-32gb', 'opt-storage-512gb'], price: 149900, stockQty: 4 },
+            { valueSlugs: ['opt-ram-32gb', 'opt-storage-1tb'], price: 159900, stockQty: 3 },
+        ],
+    );
+
+    const amdRig = byCode.get('DT-GM-002')!;
+    await seedVariantMatrix(
+        database,
+        amdRig,
+        [
+            {
+                code: 'ram',
+                name: 'RAM',
+                sortOrder: 1,
+                values: [
+                    { label: '16GB', slug: 'opt-ram-16gb', attributeOption: opt('ram-16gb') },
+                    { label: '32GB', slug: 'opt-ram-32gb', attributeOption: opt('ram-32gb') },
+                ],
+            },
+            {
+                code: 'storage',
+                name: 'Storage',
+                sortOrder: 2,
+                values: [
+                    {
+                        label: '512GB',
+                        slug: 'opt-storage-512gb',
+                        attributeOption: opt('storage-512gb'),
+                    },
+                    {
+                        label: '1TB',
+                        slug: 'opt-storage-1tb',
+                        attributeOption: opt('storage-1tb'),
+                    },
+                ],
+            },
+        ],
+        [
+            { valueSlugs: ['opt-ram-16gb', 'opt-storage-512gb'], price: 119900, stockQty: 5, isDefault: true },
+            { valueSlugs: ['opt-ram-16gb', 'opt-storage-1tb'], price: 129900, stockQty: 5 },
+            { valueSlugs: ['opt-ram-32gb', 'opt-storage-512gb'], price: 139900, stockQty: 4 },
+            { valueSlugs: ['opt-ram-32gb', 'opt-storage-1tb'], price: 149900, stockQty: 4 },
+        ],
+    );
+
+    const tufLaptop = byCode.get('LP-GM-001')!;
+    await seedVariantMatrix(
+        database,
+        tufLaptop,
+        [
+            {
+                code: 'color',
+                name: 'Color',
+                sortOrder: 1,
+                values: [
+                    { label: 'Black', slug: 'opt-color-black', attributeOption: opt('color-black') },
+                    { label: 'Silver', slug: 'opt-color-silver', attributeOption: opt('color-silver') },
+                ],
+            },
+            {
+                code: 'ram',
+                name: 'RAM',
+                sortOrder: 2,
+                values: [
+                    { label: '16GB', slug: 'opt-ram-16gb', attributeOption: opt('ram-16gb') },
+                    { label: '32GB', slug: 'opt-ram-32gb', attributeOption: opt('ram-32gb') },
+                ],
+            },
+        ],
+        [
+            { valueSlugs: ['opt-color-black', 'opt-ram-16gb'], price: 109900, stockQty: 8, isDefault: true },
+            { valueSlugs: ['opt-color-black', 'opt-ram-32gb'], price: 124900, stockQty: 6 },
+            { valueSlugs: ['opt-color-silver', 'opt-ram-16gb'], price: 112900, stockQty: 7 },
+            { valueSlugs: ['opt-color-silver', 'opt-ram-32gb'], price: 134900, stockQty: 5 },
+        ],
+    );
+
+    const xpsLaptop = byCode.get('LP-UB-001')!;
+    await seedVariantMatrix(
+        database,
+        xpsLaptop,
+        [
+            {
+                code: 'ram',
+                name: 'RAM',
+                sortOrder: 1,
+                values: [
+                    { label: '16GB', slug: 'opt-ram-16gb', attributeOption: opt('ram-16gb') },
+                    { label: '32GB', slug: 'opt-ram-32gb', attributeOption: opt('ram-32gb') },
+                ],
+            },
+            {
+                code: 'storage',
+                name: 'Storage',
+                sortOrder: 2,
+                values: [
+                    {
+                        label: '512GB',
+                        slug: 'opt-storage-512gb',
+                        attributeOption: opt('storage-512gb'),
+                    },
+                    {
+                        label: '1TB',
+                        slug: 'opt-storage-1tb',
+                        attributeOption: opt('storage-1tb'),
+                    },
+                ],
+            },
+        ],
+        [
+            { valueSlugs: ['opt-ram-16gb', 'opt-storage-512gb'], price: 149900, stockQty: 5, isDefault: true },
+            { valueSlugs: ['opt-ram-16gb', 'opt-storage-1tb'], price: 159900, stockQty: 4 },
+            { valueSlugs: ['opt-ram-32gb', 'opt-storage-512gb'], price: 169900, stockQty: 3 },
+            { valueSlugs: ['opt-ram-32gb', 'opt-storage-1tb'], price: 179900, stockQty: 2 },
+        ],
+    );
+
+    const rgbRam = byCode.get('CP-RAM-001')!;
+    await seedVariantMatrix(
+        database,
+        rgbRam,
+        [
+            {
+                code: 'color',
+                name: 'Color',
+                sortOrder: 1,
+                values: [
+                    { label: 'Black', slug: 'opt-color-black', attributeOption: opt('color-black') },
+                    { label: 'White', slug: 'opt-color-white', attributeOption: opt('color-white') },
+                ],
+            },
+            {
+                code: 'ram',
+                name: 'Capacity',
+                sortOrder: 2,
+                values: [
+                    { label: '16GB', slug: 'opt-ram-16gb', attributeOption: opt('ram-16gb') },
+                    { label: '32GB', slug: 'opt-ram-32gb', attributeOption: opt('ram-32gb') },
+                ],
+            },
+        ],
+        [
+            { valueSlugs: ['opt-color-black', 'opt-ram-16gb'], price: 12900, stockQty: 15, isDefault: true },
+            { valueSlugs: ['opt-color-black', 'opt-ram-32gb'], price: 16900, stockQty: 12 },
+            { valueSlugs: ['opt-color-white', 'opt-ram-16gb'], price: 13900, stockQty: 10 },
+            { valueSlugs: ['opt-color-white', 'opt-ram-32gb'], price: 18900, stockQty: 8 },
+        ],
+    );
+
+    const proPhone = byCode.get('PH-001')!;
+    await seedVariantMatrix(
+        database,
+        proPhone,
+        [
+            {
+                code: 'color',
+                name: 'Color',
+                sortOrder: 1,
+                values: [
+                    { label: 'Black', slug: 'opt-color-black', attributeOption: opt('color-black') },
+                    { label: 'Blue', slug: 'opt-color-blue', attributeOption: opt('color-blue') },
+                    {
+                        label: 'Titanium',
+                        slug: 'opt-color-titanium',
+                        attributeOption: opt('color-titanium'),
+                    },
+                ],
+            },
+            {
+                code: 'ram',
+                name: 'RAM',
+                sortOrder: 2,
+                values: [
+                    { label: '8GB', slug: 'opt-ram-8gb', attributeOption: opt('ram-8gb') },
+                    { label: '16GB', slug: 'opt-ram-16gb', attributeOption: opt('ram-16gb') },
+                ],
+            },
+        ],
+        [
+            { valueSlugs: ['opt-color-black', 'opt-ram-8gb'], price: 99900, stockQty: 10, isDefault: true },
+            { valueSlugs: ['opt-color-black', 'opt-ram-16gb'], price: 114900, stockQty: 8 },
+            { valueSlugs: ['opt-color-blue', 'opt-ram-8gb'], price: 99900, stockQty: 7 },
+            { valueSlugs: ['opt-color-blue', 'opt-ram-16gb'], price: 114900, stockQty: 6 },
+            { valueSlugs: ['opt-color-titanium', 'opt-ram-8gb'], price: 104900, stockQty: 5 },
+            {
+                valueSlugs: ['opt-color-titanium', 'opt-ram-16gb'],
+                price: 129900,
+                stockQty: 4,
+                availability: 'LOW_STOCK',
+            },
+        ],
+    );
+
+    const litePhone = byCode.get('PH-002')!;
+    await seedVariantMatrix(
+        database,
+        litePhone,
+        [
+            {
+                code: 'color',
+                name: 'Color',
+                sortOrder: 1,
+                values: [
+                    { label: 'Black', slug: 'opt-color-black', attributeOption: opt('color-black') },
+                    { label: 'Blue', slug: 'opt-color-blue', attributeOption: opt('color-blue') },
+                ],
+            },
+            {
+                code: 'ram',
+                name: 'RAM',
+                sortOrder: 2,
+                values: [
+                    { label: '4GB', slug: 'opt-ram-4gb', attributeOption: opt('ram-4gb') },
+                    { label: '8GB', slug: 'opt-ram-8gb', attributeOption: opt('ram-8gb') },
+                ],
+            },
+        ],
+        [
+            { valueSlugs: ['opt-color-black', 'opt-ram-4gb'], price: 29900, stockQty: 15, isDefault: true },
+            { valueSlugs: ['opt-color-black', 'opt-ram-8gb'], price: 34900, stockQty: 12 },
+            { valueSlugs: ['opt-color-blue', 'opt-ram-4gb'], price: 29900, stockQty: 12 },
+            { valueSlugs: ['opt-color-blue', 'opt-ram-8gb'], price: 34900, stockQty: 11 },
+        ],
+    );
+
+    const galaxyFlagship = byCode.get('PH-003')!;
+    await seedVariantMatrix(
+        database,
+        galaxyFlagship,
+        [
+            {
+                code: 'color',
+                name: 'Color',
+                sortOrder: 1,
+                values: [
+                    { label: 'Black', slug: 'opt-color-black', attributeOption: opt('color-black') },
+                    {
+                        label: 'Titanium',
+                        slug: 'opt-color-titanium',
+                        attributeOption: opt('color-titanium'),
+                    },
+                ],
+            },
+            {
+                code: 'storage',
+                name: 'Storage',
+                sortOrder: 2,
+                values: [
+                    {
+                        label: '256GB',
+                        slug: 'opt-storage-256gb',
+                        attributeOption: opt('storage-256gb'),
+                    },
+                    {
+                        label: '512GB',
+                        slug: 'opt-storage-512gb',
+                        attributeOption: opt('storage-512gb'),
+                    },
+                ],
+            },
+            {
+                code: 'ram',
+                name: 'RAM',
+                sortOrder: 3,
+                values: [
+                    { label: '8GB', slug: 'opt-ram-8gb', attributeOption: opt('ram-8gb') },
+                    { label: '16GB', slug: 'opt-ram-16gb', attributeOption: opt('ram-16gb') },
+                ],
+            },
+        ],
+        [
+            {
+                valueSlugs: ['opt-color-black', 'opt-storage-256gb', 'opt-ram-8gb'],
+                price: 119900,
+                stockQty: 5,
+                isDefault: true,
+            },
+            {
+                valueSlugs: ['opt-color-black', 'opt-storage-256gb', 'opt-ram-16gb'],
+                price: 129900,
+                stockQty: 4,
+            },
+            {
+                valueSlugs: ['opt-color-black', 'opt-storage-512gb', 'opt-ram-8gb'],
+                price: 134900,
+                stockQty: 3,
+            },
+            // sparse hole: black / 512 / 16
+            {
+                valueSlugs: ['opt-color-titanium', 'opt-storage-256gb', 'opt-ram-8gb'],
+                price: 124900,
+                stockQty: 4,
+            },
+            {
+                valueSlugs: ['opt-color-titanium', 'opt-storage-512gb', 'opt-ram-8gb'],
+                price: 139900,
+                stockQty: 2,
+                availability: 'PRE_ORDER',
+            },
+            {
+                valueSlugs: ['opt-color-titanium', 'opt-storage-512gb', 'opt-ram-16gb'],
+                price: 149900,
+                stockQty: 1,
+                availability: 'LOW_STOCK',
+            },
+            // sparse hole: titanium / 256 / 16
+        ],
+    );
+
+    const tabFe = byCode.get('TB-001')!;
+    await seedVariantMatrix(
+        database,
+        tabFe,
+        [
+            {
+                code: 'color',
+                name: 'Color',
+                sortOrder: 1,
+                values: [
+                    { label: 'Silver', slug: 'opt-color-silver', attributeOption: opt('color-silver') },
+                    { label: 'Black', slug: 'opt-color-black', attributeOption: opt('color-black') },
+                ],
+            },
+            {
+                code: 'storage',
+                name: 'Storage',
+                sortOrder: 2,
+                values: [
+                    {
+                        label: '128GB',
+                        slug: 'opt-storage-128gb',
+                        attributeOption: opt('storage-128gb'),
+                    },
+                    {
+                        label: '256GB',
+                        slug: 'opt-storage-256gb',
+                        attributeOption: opt('storage-256gb'),
+                    },
+                ],
+            },
+        ],
+        [
+            { valueSlugs: ['opt-color-silver', 'opt-storage-128gb'], price: 44900, stockQty: 8, isDefault: true },
+            { valueSlugs: ['opt-color-silver', 'opt-storage-256gb'], price: 49900, stockQty: 6 },
+            { valueSlugs: ['opt-color-black', 'opt-storage-128gb'], price: 44900, stockQty: 5 },
+            { valueSlugs: ['opt-color-black', 'opt-storage-256gb'], price: 54900, stockQty: 5 },
+        ],
+    );
+
+    console.log(
+        `Products seeded: ${allSeeds.length} total ` +
+            `(D${desktopSeeds.length} L${laptopSeeds.length} C${componentSeeds.length} ` +
+            `M${monitorSeeds.length} U${upsSeeds.length} P${phoneSeeds.length} ` +
+            `T${tabletSeeds.length} A${accessorySeeds.length}).`,
+    );
+
+    return byCode;
+}
