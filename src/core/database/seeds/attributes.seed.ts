@@ -158,6 +158,9 @@ export async function seedAttributes(
         'techcorp',
         'soundmax',
         'voltgear',
+        'benq',
+        'kingston',
+        'xiaomi',
     ].map((slug, index) => {
         const brand = brands.get(slug);
         if (!brand) {

@@ -4,6 +4,7 @@ import schema from '../drizzle/drizzle.schema';
 import { seedAttributes } from './attributes.seed';
 import { seedBrands } from './brands.seed';
 import { seedCategories } from './categories.seed';
+import { seedProductImages } from './product-images.seed';
 import { seedProducts } from './products.seed';
 import { seedSpecifications } from './specifications.seed';
 
@@ -31,6 +32,7 @@ export async function seedDummyData(
         categories,
         options,
     );
+    await seedProductImages(database, products);
     await seedSpecifications(database, products);
 
     console.log('Dummy catalog seeded successfully.');

@@ -112,6 +112,27 @@ export async function seedBrands(
                 isFeatured: false,
                 sortOrder: 15,
             },
+            {
+                name: 'BenQ',
+                slug: 'benq',
+                description: 'Monitors and displays',
+                isFeatured: false,
+                sortOrder: 16,
+            },
+            {
+                name: 'Kingston',
+                slug: 'kingston',
+                description: 'Memory and storage',
+                isFeatured: false,
+                sortOrder: 17,
+            },
+            {
+                name: 'Xiaomi',
+                slug: 'xiaomi',
+                description: 'Phones, tablets, and gadgets',
+                isFeatured: false,
+                sortOrder: 18,
+            },
         ])
         .returning();
 
