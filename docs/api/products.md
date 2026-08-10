@@ -36,6 +36,8 @@ Shared conventions: [README.md](./README.md)
 | `description` | string \| null |
 | `searchDocument` | string \| null |
 | `isActive` | boolean |
+| `isFeatured` | boolean |
+| `featuredSortOrder` | number |
 | `deletedAt` | ISO date-time \| null |
 | `createdAt` | ISO date-time |
 | `updatedAt` | ISO date-time |
@@ -49,6 +51,28 @@ Optional nested (detail responses):
 ## List query
 
 [Common list params](./README.md#common-list-query-params); `sort`: `name` \| `price` \| `createdAt` \| `updatedAt`
+
+| Param | Type | Notes |
+|-------|------|-------|
+| `featured` | `true` \| `false` | When `true`, returns featured homepage grid cards with `saveAmount` / `savePercent` |
+
+---
+
+## Featured product card shape (`featured=true`)
+
+| Field | Type |
+|-------|------|
+| `id` | UUID |
+| `name` | string |
+| `slug` | string |
+| `thumbnailUrl` | string \| null |
+| `price` | int |
+| `regularPrice` | int \| null |
+| `saveAmount` | int \| null |
+| `savePercent` | int \| null |
+| `earnPoints` | int |
+| `availability` | enum |
+| `featuredSortOrder` | number |
 
 ---
 

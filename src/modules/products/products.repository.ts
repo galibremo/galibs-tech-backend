@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
   and,
+  asc,
   count,
   desc,
   eq,
@@ -136,6 +137,47 @@ export class ProductsRepository {
         .select({ value: count() })
         .from(schema.products)
         .where(notDeleted),
+    ]);
+
+    return {
+      rows,
+      total: Number(totalRows[0]?.value ?? 0),
+      page,
+      pageSize,
+    };
+  }
+
+  async listFeaturedProducts(
+    page: number = 1,
+    pageSize: number = 20,
+  ): Promise<{
+    rows: (typeof schema.products.$inferSelect)[];
+    total: number;
+    page: number;
+    pageSize: number;
+  }> {
+    const offset = (page - 1) * pageSize;
+    const featuredCondition = and(
+      isNull(schema.products.deletedAt),
+      eq(schema.products.isActive, true),
+      eq(schema.products.isFeatured, true),
+    );
+
+    const [rows, totalRows] = await Promise.all([
+      this.db
+        .select()
+        .from(schema.products)
+        .where(featuredCondition)
+        .orderBy(
+          asc(schema.products.featuredSortOrder),
+          asc(schema.products.createdAt),
+        )
+        .limit(pageSize)
+        .offset(offset),
+      this.db
+        .select({ value: count() })
+        .from(schema.products)
+        .where(featuredCondition),
     ]);
 
     return {

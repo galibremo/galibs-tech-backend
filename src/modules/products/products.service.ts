@@ -6,12 +6,15 @@ import {
   isDatabaseUniqueViolation,
   notFoundError,
 } from '../../core/errors/domain-error';
+import { computeProductSavings } from '../../shared/helpers/product-pricing.helper';
 import { ProductsRepository } from './products.repository';
 import type {
   AddProductCategoriesDto,
   AddProductImageDto,
   CreateProductDto,
   DeleteProductResponse,
+  FeaturedProductCardResponse,
+  FeaturedProductListResponse,
   ProductAttributesResponse,
   ProductAttributeOptionsDto,
   ProductImageResponse,
@@ -27,9 +30,24 @@ export class ProductsService {
 
   async listProducts(
     query: ProductsListQueryDto,
-  ): Promise<ProductListResponse> {
+  ): Promise<ProductListResponse | FeaturedProductListResponse> {
     const page = query.page ?? 1;
-    const pageSize = query.pageSize ?? 10;
+    const pageSize = query.pageSize ?? (query.featured ? 20 : 10);
+
+    if (query.featured) {
+      const products = await this.productsRepository.listFeaturedProducts(
+        page,
+        pageSize,
+      );
+
+      return {
+        rows: products.rows.map((row) => this.mapFeaturedProductCard(row)),
+        total: products.total,
+        page: products.page,
+        pageSize: products.pageSize,
+      };
+    }
+
     const products = await this.productsRepository.listProducts(page, pageSize);
 
     return {
@@ -157,6 +175,8 @@ export class ProductsService {
           earnPoints: data.earnPoints,
           emiMonthlyAmount: data.emiMonthlyAmount ?? null,
           badges: data.badges,
+          isFeatured: data.isFeatured,
+          featuredSortOrder: data.featuredSortOrder,
         });
 
       if (!created) {
@@ -457,6 +477,8 @@ export class ProductsService {
       description: string | null;
       searchDocument: string | null;
       isActive: boolean;
+      isFeatured: boolean;
+      featuredSortOrder: number;
       deletedAt: Date | null;
       createdAt: Date;
       updatedAt: Date;
@@ -487,9 +509,47 @@ export class ProductsService {
       description: row.description,
       searchDocument: row.searchDocument,
       isActive: row.isActive,
+      isFeatured: row.isFeatured,
+      featuredSortOrder: row.featuredSortOrder,
       deletedAt: row.deletedAt,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
+    };
+  }
+
+  private mapFeaturedProductCard(row: {
+    id: string;
+    name: string;
+    slug: string;
+    thumbnailUrl: string | null;
+    price: number;
+    regularPrice: number | null;
+    earnPoints: number;
+    availability:
+      | 'IN_STOCK'
+      | 'OUT_OF_STOCK'
+      | 'LOW_STOCK'
+      | 'PRE_ORDER'
+      | 'UPCOMING';
+    featuredSortOrder: number;
+  }): FeaturedProductCardResponse {
+    const { saveAmount, savePercent } = computeProductSavings(
+      row.price,
+      row.regularPrice,
+    );
+
+    return {
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      thumbnailUrl: row.thumbnailUrl,
+      price: row.price,
+      regularPrice: row.regularPrice,
+      saveAmount,
+      savePercent,
+      earnPoints: row.earnPoints,
+      availability: row.availability,
+      featuredSortOrder: row.featuredSortOrder,
     };
   }
 }

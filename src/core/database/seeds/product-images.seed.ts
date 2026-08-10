@@ -108,7 +108,7 @@ function pickGalleryUrls(
     const gallerySize = 2 + (productIndex % 2); // 2 or 3
     const urls: string[] = [];
     for (let offset = 0; offset < gallerySize; offset += 1) {
-        urls.push(pool[(productIndex + offset) % pool.length]!);
+        urls.push(pool[(productIndex + offset) % pool.length]);
     }
     return urls;
 }
@@ -130,10 +130,10 @@ export async function seedProductImages(
     }> = [];
 
     for (let index = 0; index < productList.length; index += 1) {
-        const product = productList[index]!;
+        const product = productList[index];
         const domain = domainForProductCode(product.productCode);
         const urls = pickGalleryUrls(domain, index);
-        const primaryUrl = urls[0]!;
+        const primaryUrl = urls[0];
 
         await database
             .update(products)
@@ -143,7 +143,7 @@ export async function seedProductImages(
         for (let sortOrder = 0; sortOrder < urls.length; sortOrder += 1) {
             imageRows.push({
                 productId: product.id,
-                url: urls[sortOrder]!,
+                url: urls[sortOrder],
                 altText: `${product.name} photo ${sortOrder + 1}`,
                 sortOrder,
                 isPrimary: sortOrder === 0,

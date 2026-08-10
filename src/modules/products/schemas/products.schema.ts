@@ -31,7 +31,14 @@ const PRODUCT_SORTABLE_FIELDS: readonly SortableField[] = [
   { name: 'updatedAt', queryName: 'updatedAt' },
 ] as const;
 
-export const ProductsListQuerySchema = baseQuerySchema(PRODUCT_SORTABLE_FIELDS);
+export const ProductsListQuerySchema = baseQuerySchema(
+  PRODUCT_SORTABLE_FIELDS,
+).extend({
+  featured: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((value) => value === 'true'),
+});
 
 export const CreateProductSchema = z
   .object({
@@ -79,6 +86,13 @@ export const CreateProductSchema = z
     badges: validateArray('Badges', validateString('Badge', { max: 80 }))
       .optional()
       .default([]),
+    isFeatured: validateBoolean('Is Featured').optional().default(false),
+    featuredSortOrder: validateNumber('Featured Sort Order', {
+      min: 0,
+      int: true,
+    })
+      .optional()
+      .default(0),
   })
   .strict();
 
@@ -125,6 +139,11 @@ export const UpdateProductSchema = z
       validateString('Badge', { max: 80 }),
     ).optional(),
     isActive: validateBoolean('Is Active').optional(),
+    isFeatured: validateBoolean('Is Featured').optional(),
+    featuredSortOrder: validateNumber('Featured Sort Order', {
+      min: 0,
+      int: true,
+    }).optional(),
   })
   .strict()
   .refine((data) => Object.keys(data).length > 0, {
@@ -218,6 +237,20 @@ export const ProductVariantSummarySchema = z.object({
   optionValueIds: z.array(validateUUID('Option Value ID')),
 });
 
+export const FeaturedProductCardResponseSchema = z.object({
+  id: validateUUID('Product ID'),
+  name: validateString('Name'),
+  slug: validateString('Slug'),
+  thumbnailUrl: validateString('Thumbnail URL').nullable(),
+  price: validateNumber('Price'),
+  regularPrice: validateNumber('Regular Price').nullable(),
+  saveAmount: validateNumber('Save Amount').nullable(),
+  savePercent: validateNumber('Save Percent').nullable(),
+  earnPoints: validateNumber('Earn Points'),
+  availability: validateEnum('Availability', STOCK_STATUSES),
+  featuredSortOrder: validateNumber('Featured Sort Order'),
+});
+
 export const ProductResponseSchema = z.object({
   id: validateUUID('Product ID'),
   type: validateEnum('Type', PRODUCT_TYPES),
@@ -243,6 +276,8 @@ export const ProductResponseSchema = z.object({
   description: validateString('Description').nullable(),
   searchDocument: validateString('Search Document').nullable(),
   isActive: validateBoolean('Is Active'),
+  isFeatured: validateBoolean('Is Featured'),
+  featuredSortOrder: validateNumber('Featured Sort Order'),
   deletedAt: validateDate('Deleted At').nullable(),
   createdAt: validateDate('Created At'),
   updatedAt: validateDate('Updated At'),
@@ -256,6 +291,13 @@ export const ProductResponseSchema = z.object({
 
 export const ProductListResponseSchema = z.object({
   rows: z.array(ProductResponseSchema),
+  total: validateNumber('Total', { min: 0, int: true }),
+  page: validateNumber('Page', { min: 1, int: true }),
+  pageSize: validateNumber('Page Size', { min: 1, int: true }),
+});
+
+export const FeaturedProductListResponseSchema = z.object({
+  rows: z.array(FeaturedProductCardResponseSchema),
   total: validateNumber('Total', { min: 0, int: true }),
   page: validateNumber('Page', { min: 1, int: true }),
   pageSize: validateNumber('Page Size', { min: 1, int: true }),
@@ -297,6 +339,9 @@ export const ProductApiResponseSchema =
 export const ProductListApiResponseSchema = createApiResponseSchema(
   ProductListResponseSchema,
 );
+export const FeaturedProductListApiResponseSchema = createApiResponseSchema(
+  FeaturedProductListResponseSchema,
+);
 export const DeleteProductApiResponseSchema = createApiResponseSchema(
   DeleteProductResponseSchema,
 );
@@ -322,6 +367,12 @@ export type ProductAttributeOptionsDto = z.infer<
 >;
 export type ProductResponse = z.infer<typeof ProductResponseSchema>;
 export type ProductListResponse = z.infer<typeof ProductListResponseSchema>;
+export type FeaturedProductCardResponse = z.infer<
+  typeof FeaturedProductCardResponseSchema
+>;
+export type FeaturedProductListResponse = z.infer<
+  typeof FeaturedProductListResponseSchema
+>;
 export type DeleteProductResponse = z.infer<typeof DeleteProductResponseSchema>;
 export type ProductImageResponse = z.infer<typeof ProductImageResponseSchema>;
 export type ProductAttributesResponse = z.infer<
@@ -330,6 +381,9 @@ export type ProductAttributesResponse = z.infer<
 export type ProductApiResponse = z.infer<typeof ProductApiResponseSchema>;
 export type ProductListApiResponse = z.infer<
   typeof ProductListApiResponseSchema
+>;
+export type FeaturedProductListApiResponse = z.infer<
+  typeof FeaturedProductListApiResponseSchema
 >;
 export type DeleteProductApiResponse = z.infer<
   typeof DeleteProductApiResponseSchema

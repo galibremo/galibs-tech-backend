@@ -14,6 +14,8 @@ import { EmailProviderModule } from './modules/email-provider/email-provider.mod
 import { EmailTemplateModule } from './modules/email-template/email-template.module';
 import { StorageModule } from './core/storage/storage.module';
 import { MediaModule } from './modules/media/media.module';
+import { PromotionalModule } from './modules/promotional/promotional.module';
+import { OffersModule } from './modules/offers/offers.module';
 import { BrandsModule } from './modules/brands/brands.module';
 import { UtilsModule } from './modules/utils/utils.module';
 import { CategoriesModule } from './modules/categories/categories.module';
@@ -46,6 +48,8 @@ import { CommerceModule } from './modules/commerce/commerce.module';
       },
     ]),
     MediaModule,
+    PromotionalModule,
+    OffersModule,
     DatabaseModule,
     StorageModule,
     CryptoModule,

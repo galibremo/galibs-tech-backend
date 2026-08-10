@@ -19,7 +19,7 @@ export class MediaService {
     file: Express.Multer.File,
     folder?: string,
   ): Promise<UploadResponse> {
-    MediaPolicy.assertCanUpload(actor);
+    MediaPolicy.assertCanUpload(actor, folder);
 
     if (!file) {
       throw badRequestError('No file provided.');

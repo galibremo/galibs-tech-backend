@@ -17,6 +17,8 @@ There is **no global `/api` prefix**. Routes are served from the root (default p
 | Categories & catalog | [categories.md](./categories.md) |
 | Attributes | [attributes.md](./attributes.md) |
 | Products | [products.md](./products.md) |
+| Promotional | [promotional.md](./promotional.md) |
+| Offers | [offers.md](./offers.md) |
 | Variants & option groups | [variants.md](./variants.md) |
 | Specifications | [specifications.md](./specifications.md) |
 | Cart | [cart.md](./cart.md) |

@@ -10,6 +10,7 @@ import schema from './drizzle/drizzle.schema';
 import { seedEmailTemplates } from './seeds/email-template.seed';
 import { seedUser } from './seeds/user.seed';
 import { seedDummyData } from './seeds/dummy-data.seed';
+import { seedPromotionalData } from './seeds/promotional.seed';
 
 async function main(): Promise<void> {
     const connectionString = process.env.DATABASE_URL;
@@ -27,6 +28,7 @@ async function main(): Promise<void> {
         await seedUser(db, auth);
         await seedEmailTemplates(db);
         await seedDummyData(db);
+        await seedPromotionalData(db);
         console.log('Database seed completed successfully.');
     } finally {
         await pool.end();

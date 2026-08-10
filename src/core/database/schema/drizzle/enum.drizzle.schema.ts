@@ -38,3 +38,14 @@ export const paymentStatusEnum = pgEnum('payment_status', [
   'PAID',
   'CANCELLED',
 ]);
+
+export const linkTargetEnum = pgEnum('link_target', ['_self', '_blank']);
+
+export const offerTypeEnum = pgEnum('offer_type', [
+  'FLASH_SALE',
+  'HAPPY_HOUR',
+  'CAMPAIGN',
+  'SPECIAL_OFFER',
+  'EMI',
+  'BUNDLE',
+]);

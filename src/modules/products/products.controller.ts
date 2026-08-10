@@ -25,6 +25,8 @@ import {
   type DeleteProductApiResponse,
   ProductApiResponseSchema,
   type ProductApiResponse,
+  FeaturedProductListApiResponseSchema,
+  type FeaturedProductListApiResponse,
   ProductListApiResponseSchema,
   type ProductListApiResponse,
   ProductsListQuerySchema,
@@ -43,12 +45,18 @@ export class ProductsController {
     @Req() request: ExpressRequest,
     @Query(new ZodValidationPipe(ProductsListQuerySchema))
     query: ProductsListQueryDto,
-  ): Promise<ProductListApiResponse> {
+  ): Promise<ProductListApiResponse | FeaturedProductListApiResponse> {
     const products = await this.productsService.listProducts(query);
-    return ProductListApiResponseSchema.parse(
+    const schema = query.featured
+      ? FeaturedProductListApiResponseSchema
+      : ProductListApiResponseSchema;
+
+    return schema.parse(
       createApiResponse({
         statusCode: HttpStatus.OK,
-        message: 'Products fetched successfully',
+        message: query.featured
+          ? 'Featured products fetched successfully'
+          : 'Products fetched successfully',
         data: products,
         path: request.url,
       }),

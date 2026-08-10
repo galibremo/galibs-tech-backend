@@ -491,7 +491,7 @@ These exist on the live site but were intentionally kept light or omitted so the
 
 - Full checkout / orders / payments / shipping rates  
 - User accounts, wishlist, cart persistence  
-- CMS pages / blog  
+- CMS pages / blog (homepage promotional CMS + offers are implemented — see `docs/api/promotional.md`, `docs/api/offers.md`)
 - Home service / servicing tickets  
 - Real-time inventory sync from ERP  
 
