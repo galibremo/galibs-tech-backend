@@ -85,42 +85,6 @@ export async function seedPromotionalData(
     })
     .returning();
 
-  const [flashSaleOffer] = await database
-    .insert(schema.offers)
-    .values({
-      name: 'Latest Offers',
-      slug: 'latest-offers',
-      type: 'FLASH_SALE',
-      description: 'Browse our latest promotional offers.',
-      isActive: true,
-      sortOrder: 1,
-    })
-    .returning();
-
-  if (happyHourOffer) {
-    await database.insert(schema.promoNavLinks).values({
-      label: 'Happy Hour',
-      sublabel: 'Special Deals',
-      icon: 'flash_on',
-      linkUrl: '/offers/happy-hour',
-      sortOrder: 1,
-      isActive: true,
-      offerId: happyHourOffer.id,
-    });
-  }
-
-  if (flashSaleOffer) {
-    await database.insert(schema.promoNavLinks).values({
-      label: 'Offers',
-      sublabel: 'Latest Offers',
-      icon: 'card_giftcard',
-      linkUrl: '/offers/latest-offers',
-      sortOrder: 0,
-      isActive: true,
-      offerId: flashSaleOffer.id,
-    });
-  }
-
   const products = await database.query.products.findMany({
     where: eq(schema.products.isActive, true),
     limit: 20,

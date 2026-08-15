@@ -11,7 +11,6 @@ import {
 
 import { timestamps } from '../../helpers';
 import { linkTargetEnum } from './enum.drizzle.schema';
-import { offers } from './offers.drizzle.schema';
 
 export const heroSlides = pgTable(
   'hero_slides',
@@ -36,24 +35,3 @@ export const heroSlides = pgTable(
   ],
 );
 
-export const promoNavLinks = pgTable(
-  'promo_nav_links',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    label: varchar('label', { length: 100 }).notNull(),
-    sublabel: varchar('sublabel', { length: 100 }),
-    icon: varchar('icon', { length: 50 }),
-    linkUrl: text('link_url').notNull(),
-    badge: varchar('badge', { length: 50 }),
-    sortOrder: integer('sort_order').notNull().default(0),
-    isActive: boolean('is_active').notNull().default(true),
-    offerId: uuid('offer_id').references(() => offers.id, {
-      onDelete: 'set null',
-    }),
-    ...timestamps,
-  },
-  (table) => [
-    index('promo_nav_links_active_sort_idx').on(table.isActive, table.sortOrder),
-    index('promo_nav_links_offer_idx').on(table.offerId),
-  ],
-);

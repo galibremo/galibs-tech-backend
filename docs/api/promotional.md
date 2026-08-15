@@ -3,7 +3,7 @@
 Base path: `/promotional`  
 Shared conventions: [README.md](./README.md)
 
-StarTech-style homepage promotional content: hero carousel banners and header promo navigation links.
+StarTech-style homepage promotional content: hero carousel banners.
 
 > Featured products use `GET /products?featured=true`. Promotional deal products use [offers.md](./offers.md).
 
@@ -13,8 +13,7 @@ StarTech-style homepage promotional content: hero carousel banners and header pr
 
 ```json
 {
-  "heroSlides": [],
-  "promoNavLinks": []
+  "heroSlides": []
 }
 ```
 
@@ -24,10 +23,9 @@ StarTech-style homepage promotional content: hero carousel banners and header pr
 
 **Auth:** Public · **Status:** 200
 
-Returns active hero slides and promo nav links.
+Returns active hero slides.
 
 - Hero slides: `isActive = true` and within optional `startsAt` / `endsAt` window
-- Promo nav links: `isActive = true`
 - Sorted by `sortOrder` ascending
 
 ---
@@ -48,24 +46,6 @@ Returns active hero slides and promo nav links.
 | `isActive` | boolean |
 | `startsAt` | ISO date-time \| null |
 | `endsAt` | ISO date-time \| null |
-| `createdAt` | ISO date-time |
-| `updatedAt` | ISO date-time |
-
----
-
-## Promo nav link shape
-
-| Field | Type |
-|-------|------|
-| `id` | UUID |
-| `label` | string |
-| `sublabel` | string \| null |
-| `icon` | string \| null |
-| `linkUrl` | string |
-| `badge` | string \| null |
-| `sortOrder` | number |
-| `isActive` | boolean |
-| `offerId` | UUID \| null |
 | `createdAt` | ISO date-time |
 | `updatedAt` | ISO date-time |
 
@@ -119,39 +99,3 @@ Partial update. At least one field required.
 { "deleted": true }
 ```
 
----
-
-## `GET /promotional/promo-nav-links`
-
-**Auth:** Admin · **Status:** 200
-
----
-
-## `POST /promotional/promo-nav-links`
-
-**Auth:** Admin · **Status:** 201
-
-### Body
-
-| Field | Required | Notes |
-|-------|----------|-------|
-| `label` | yes | e.g. `Offers` |
-| `sublabel` | no | e.g. `Latest Offers` |
-| `icon` | no | Material icon name |
-| `linkUrl` | yes | |
-| `badge` | no | |
-| `sortOrder` | no | default `0` |
-| `isActive` | no | default `true` |
-| `offerId` | no | Link to an offer record |
-
----
-
-## `PATCH /promotional/promo-nav-links/:id`
-
-**Auth:** Admin · **Status:** 200
-
----
-
-## `DELETE /promotional/promo-nav-links/:id`
-
-**Auth:** Admin · **Status:** 200

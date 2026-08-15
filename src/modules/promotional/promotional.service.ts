@@ -5,17 +5,13 @@ import { notFoundError } from '../../core/errors/domain-error';
 import { PromotionalRepository } from './promotional.repository';
 import type {
   CreateHeroSlideDto,
-  CreatePromoNavLinkDto,
   DeletePromotionalItemResponse,
   HeroSlideResponse,
   PromotionalContentResponse,
-  PromoNavLinkResponse,
   UpdateHeroSlideDto,
-  UpdatePromoNavLinkDto,
 } from './schemas/promotional.schema';
 
 type HeroSlideRow = typeof schema.heroSlides.$inferSelect;
-type PromoNavLinkRow = typeof schema.promoNavLinks.$inferSelect;
 
 @Injectable()
 export class PromotionalService {
@@ -24,14 +20,10 @@ export class PromotionalService {
   ) {}
 
   async getPublicContent(): Promise<PromotionalContentResponse> {
-    const [heroSlides, promoNavLinks] = await Promise.all([
-      this.promotionalRepository.listActiveHeroSlides(),
-      this.promotionalRepository.listActivePromoNavLinks(),
-    ]);
+    const heroSlides = await this.promotionalRepository.listActiveHeroSlides();
 
     return {
       heroSlides: heroSlides.map((row) => this.mapHeroSlide(row)),
-      promoNavLinks: promoNavLinks.map((row) => this.mapPromoNavLink(row)),
     };
   }
 
@@ -94,69 +86,6 @@ export class PromotionalService {
     return this.mapHeroSlide(row);
   }
 
-  async listPromoNavLinksAdmin(): Promise<PromoNavLinkResponse[]> {
-    const rows = await this.promotionalRepository.listAllPromoNavLinks();
-    return rows.map((row) => this.mapPromoNavLink(row));
-  }
-
-  async createPromoNavLink(
-    data: CreatePromoNavLinkDto,
-  ): Promise<PromoNavLinkResponse> {
-    const created = await this.promotionalRepository.createPromoNavLink({
-      label: data.label,
-      sublabel: data.sublabel ?? null,
-      icon: data.icon ?? null,
-      linkUrl: data.linkUrl,
-      badge: data.badge ?? null,
-      sortOrder: data.sortOrder,
-      isActive: data.isActive,
-      offerId: data.offerId ?? null,
-    });
-
-    if (!created) {
-      throw notFoundError(
-        'promo_nav_link_not_created',
-        'Promo nav link could not be created',
-      );
-    }
-
-    return this.mapPromoNavLink(created);
-  }
-
-  async updatePromoNavLink(
-    id: string,
-    data: UpdatePromoNavLinkDto,
-  ): Promise<PromoNavLinkResponse> {
-    await this.getPromoNavLinkById(id);
-    const updated = await this.promotionalRepository.updatePromoNavLink(
-      id,
-      data,
-    );
-    if (!updated) {
-      throw notFoundError('promo_nav_link_not_found', 'Promo nav link not found');
-    }
-    return this.mapPromoNavLink(updated);
-  }
-
-  async deletePromoNavLink(
-    id: string,
-  ): Promise<DeletePromotionalItemResponse> {
-    await this.getPromoNavLinkById(id);
-    const deleted = await this.promotionalRepository.deletePromoNavLink(id);
-    if (!deleted) {
-      throw notFoundError('promo_nav_link_not_found', 'Promo nav link not found');
-    }
-    return { deleted: true };
-  }
-
-  async getPromoNavLinkById(id: string): Promise<PromoNavLinkResponse> {
-    const row = await this.promotionalRepository.findPromoNavLinkById(id);
-    if (!row) {
-      throw notFoundError('promo_nav_link_not_found', 'Promo nav link not found');
-    }
-    return this.mapPromoNavLink(row);
-  }
-
   private mapHeroSlide(row: HeroSlideRow): HeroSlideResponse {
     return {
       id: row.id,
@@ -171,22 +100,6 @@ export class PromotionalService {
       isActive: row.isActive,
       startsAt: row.startsAt,
       endsAt: row.endsAt,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-    };
-  }
-
-  private mapPromoNavLink(row: PromoNavLinkRow): PromoNavLinkResponse {
-    return {
-      id: row.id,
-      label: row.label,
-      sublabel: row.sublabel,
-      icon: row.icon,
-      linkUrl: row.linkUrl,
-      badge: row.badge,
-      sortOrder: row.sortOrder,
-      isActive: row.isActive,
-      offerId: row.offerId,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };

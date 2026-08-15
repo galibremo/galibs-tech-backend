@@ -37,7 +37,7 @@ import {
   payments,
 } from './commerce.drizzle.schema';
 import { offers, offerProducts } from './offers.drizzle.schema';
-import { heroSlides, promoNavLinks } from './promotional.drizzle.schema';
+import { heroSlides } from './promotional.drizzle.schema';
 
 export const usersRelations = relations(users, ({ many }) => ({
   sessions: many(sessions),
@@ -372,7 +372,6 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
 
 export const offersRelations = relations(offers, ({ many }) => ({
   products: many(offerProducts),
-  promoNavLinks: many(promoNavLinks),
 }));
 
 export const offerProductsRelations = relations(offerProducts, ({ one }) => ({
@@ -387,10 +386,3 @@ export const offerProductsRelations = relations(offerProducts, ({ one }) => ({
 }));
 
 export const heroSlidesRelations = relations(heroSlides, () => ({}));
-
-export const promoNavLinksRelations = relations(promoNavLinks, ({ one }) => ({
-  offer: one(offers, {
-    fields: [promoNavLinks.offerId],
-    references: [offers.id],
-  }),
-}));

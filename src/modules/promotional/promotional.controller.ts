@@ -20,8 +20,6 @@ import { PromotionalService } from './promotional.service';
 import {
   CreateHeroSlideSchema,
   type CreateHeroSlideDto,
-  CreatePromoNavLinkSchema,
-  type CreatePromoNavLinkDto,
   DeletePromotionalItemApiResponseSchema,
   type DeletePromotionalItemApiResponse,
   HeroSlideApiResponseSchema,
@@ -31,15 +29,8 @@ import {
   type HeroSlidesListApiResponse,
   PromotionalContentApiResponseSchema,
   type PromotionalContentApiResponse,
-  PromoNavLinkApiResponseSchema,
-  type PromoNavLinkApiResponse,
-  type PromoNavLinkResponse,
-  PromoNavLinksListApiResponseSchema,
-  type PromoNavLinksListApiResponse,
   UpdateHeroSlideSchema,
   type UpdateHeroSlideDto,
-  UpdatePromoNavLinkSchema,
-  type UpdatePromoNavLinkDto,
 } from './schemas/promotional.schema';
 
 @Controller('promotional')
@@ -129,80 +120,6 @@ export class PromotionalController {
     );
   }
 
-  @Get('promo-nav-links')
-  @UseGuards(AuthGuard)
-  @Roles(['SUPER_ADMIN'])
-  async listPromoNavLinks(
-    @Req() request: ExpressRequest,
-  ): Promise<PromoNavLinksListApiResponse> {
-    const promoNavLinks =
-      await this.promotionalService.listPromoNavLinksAdmin();
-    return PromoNavLinksListApiResponseSchema.parse(
-      createApiResponse({
-        statusCode: HttpStatus.OK,
-        message: 'Promo nav links fetched successfully',
-        data: promoNavLinks,
-        path: request.url,
-      }),
-    );
-  }
-
-  @Post('promo-nav-links')
-  @UseGuards(AuthGuard)
-  @Roles(['SUPER_ADMIN'])
-  async createPromoNavLink(
-    @Req() request: ExpressRequest,
-    @Body(new ZodValidationPipe(CreatePromoNavLinkSchema))
-    body: CreatePromoNavLinkDto,
-  ): Promise<PromoNavLinkApiResponse> {
-    const promoNavLink = await this.promotionalService.createPromoNavLink(body);
-    return this.promoNavLinkResponse(
-      HttpStatus.CREATED,
-      'Promo nav link created successfully',
-      promoNavLink,
-      request.url,
-    );
-  }
-
-  @Patch('promo-nav-links/:id')
-  @UseGuards(AuthGuard)
-  @Roles(['SUPER_ADMIN'])
-  async updatePromoNavLink(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Req() request: ExpressRequest,
-    @Body(new ZodValidationPipe(UpdatePromoNavLinkSchema))
-    body: UpdatePromoNavLinkDto,
-  ): Promise<PromoNavLinkApiResponse> {
-    const promoNavLink = await this.promotionalService.updatePromoNavLink(
-      id,
-      body,
-    );
-    return this.promoNavLinkResponse(
-      HttpStatus.OK,
-      'Promo nav link updated successfully',
-      promoNavLink,
-      request.url,
-    );
-  }
-
-  @Delete('promo-nav-links/:id')
-  @UseGuards(AuthGuard)
-  @Roles(['SUPER_ADMIN'])
-  async deletePromoNavLink(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Req() request: ExpressRequest,
-  ): Promise<DeletePromotionalItemApiResponse> {
-    const result = await this.promotionalService.deletePromoNavLink(id);
-    return DeletePromotionalItemApiResponseSchema.parse(
-      createApiResponse({
-        statusCode: HttpStatus.OK,
-        message: 'Promo nav link deleted successfully',
-        data: result,
-        path: request.url,
-      }),
-    );
-  }
-
   private heroSlideResponse(
     statusCode: HttpStatus,
     message: string,
@@ -214,22 +131,6 @@ export class PromotionalController {
         statusCode,
         message,
         data: heroSlide,
-        path,
-      }),
-    );
-  }
-
-  private promoNavLinkResponse(
-    statusCode: HttpStatus,
-    message: string,
-    promoNavLink: PromoNavLinkResponse,
-    path: string,
-  ): PromoNavLinkApiResponse {
-    return PromoNavLinkApiResponseSchema.parse(
-      createApiResponse({
-        statusCode,
-        message,
-        data: promoNavLink,
         path,
       }),
     );
