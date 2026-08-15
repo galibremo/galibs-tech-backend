@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import schema from 'src/core/database/drizzle/drizzle.schema';
 import { notFoundError } from '../../core/errors/domain-error';
+import { OffersService } from '../offers/offers.service';
 import { PromotionalRepository } from './promotional.repository';
 import type {
   CreateHeroSlideDto,
@@ -17,13 +18,18 @@ type HeroSlideRow = typeof schema.heroSlides.$inferSelect;
 export class PromotionalService {
   constructor(
     private readonly promotionalRepository: PromotionalRepository,
+    private readonly offersService: OffersService,
   ) {}
 
   async getPublicContent(): Promise<PromotionalContentResponse> {
-    const heroSlides = await this.promotionalRepository.listActiveHeroSlides();
+    const [heroSlides, offers] = await Promise.all([
+      this.promotionalRepository.listActiveHeroSlides(),
+      this.offersService.listActivePromotionalOffers(),
+    ]);
 
     return {
       heroSlides: heroSlides.map((row) => this.mapHeroSlide(row)),
+      offers,
     };
   }
 

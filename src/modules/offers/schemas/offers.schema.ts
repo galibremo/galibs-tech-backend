@@ -40,6 +40,9 @@ export const CreateOfferSchema = z
     type: validateEnum('Type', OFFER_TYPES),
     description: validateString('Description').nullable().optional(),
     bannerImageUrl: validateString('Banner Image URL').nullable().optional(),
+    showInPromotional: validateBoolean('Show In Promotional')
+      .optional()
+      .default(false),
     isActive: validateBoolean('Is Active').optional().default(true),
     startsAt: validateDate('Starts At').nullable().optional(),
     endsAt: validateDate('Ends At').nullable().optional(),
@@ -95,6 +98,7 @@ export const OfferResponseSchema = z.object({
   type: validateEnum('Type', OFFER_TYPES),
   description: validateString('Description').nullable(),
   bannerImageUrl: validateString('Banner Image URL').nullable(),
+  showInPromotional: validateBoolean('Show In Promotional'),
   isActive: validateBoolean('Is Active'),
   startsAt: validateDate('Starts At').nullable(),
   endsAt: validateDate('Ends At').nullable(),

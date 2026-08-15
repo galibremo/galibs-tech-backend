@@ -35,6 +35,11 @@ export class OffersService {
     return rows.map((row) => this.mapOffer(row));
   }
 
+  async listActivePromotionalOffers(): Promise<OfferResponse[]> {
+    const rows = await this.offersRepository.listActivePromotionalOffers();
+    return rows.map((row) => this.mapOffer(row));
+  }
+
   async listOffers(query: OffersListQueryDto): Promise<OffersListResponse> {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
@@ -90,6 +95,7 @@ export class OffersService {
         type: data.type,
         description: data.description ?? null,
         bannerImageUrl: data.bannerImageUrl ?? null,
+        showInPromotional: data.showInPromotional,
         isActive: data.isActive,
         startsAt: data.startsAt ?? null,
         endsAt: data.endsAt ?? null,
@@ -206,6 +212,7 @@ export class OffersService {
       type: row.type,
       description: row.description,
       bannerImageUrl: row.bannerImageUrl,
+      showInPromotional: row.showInPromotional,
       isActive: row.isActive,
       startsAt: row.startsAt,
       endsAt: row.endsAt,

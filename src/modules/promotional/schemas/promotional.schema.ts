@@ -9,6 +9,8 @@ import {
   validateUUID,
 } from '../../../core/validators/common.schema';
 
+import { OfferResponseSchema } from '../../offers/schemas/offers.schema';
+
 export const LINK_TARGETS = ['_self', '_blank'] as const;
 
 export const CreateHeroSlideSchema = z
@@ -52,6 +54,7 @@ export const HeroSlideResponseSchema = z.object({
 
 export const PromotionalContentResponseSchema = z.object({
   heroSlides: z.array(HeroSlideResponseSchema),
+  offers: z.array(OfferResponseSchema),
 });
 
 export const DeletePromotionalItemResponseSchema = z.object({

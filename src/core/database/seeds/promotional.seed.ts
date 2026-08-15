@@ -80,6 +80,7 @@ export async function seedPromotionalData(
       slug: 'happy-hour',
       type: 'HAPPY_HOUR',
       description: 'Limited-time happy hour discounts on selected products.',
+      showInPromotional: true,
       isActive: true,
       sortOrder: 0,
     })

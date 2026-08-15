@@ -23,6 +23,9 @@ export const offers = pgTable(
     type: offerTypeEnum('type').notNull(),
     description: text('description'),
     bannerImageUrl: text('banner_image_url'),
+    showInPromotional: boolean('show_in_promotional')
+      .notNull()
+      .default(false),
     isActive: boolean('is_active').notNull().default(true),
     startsAt: timestamp('starts_at', { withTimezone: true }),
     endsAt: timestamp('ends_at', { withTimezone: true }),
@@ -32,6 +35,13 @@ export const offers = pgTable(
   (table) => [
     uniqueIndex('offers_slug_uidx').on(table.slug),
     index('offers_active_schedule_idx').on(
+      table.isActive,
+      table.startsAt,
+      table.endsAt,
+      table.sortOrder,
+    ),
+    index('offers_promotional_idx').on(
+      table.showInPromotional,
       table.isActive,
       table.startsAt,
       table.endsAt,

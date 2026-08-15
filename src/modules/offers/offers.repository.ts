@@ -40,6 +40,19 @@ export class OffersRepository {
       .orderBy(asc(schema.offers.sortOrder), asc(schema.offers.createdAt));
   }
 
+  listActivePromotionalOffers(now: Date = new Date()) {
+    return this.db
+      .select()
+      .from(schema.offers)
+      .where(
+        and(
+          eq(schema.offers.showInPromotional, true),
+          this.activeScheduleCondition(now),
+        ),
+      )
+      .orderBy(asc(schema.offers.sortOrder), asc(schema.offers.createdAt));
+  }
+
   async listOffers(page: number = 1, pageSize: number = 10) {
     const offset = (page - 1) * pageSize;
 
