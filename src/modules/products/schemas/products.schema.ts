@@ -74,9 +74,6 @@ export const CreateProductSchema = z
     warrantyMonths: validateNumber('Warranty Months', { min: 0, int: true })
       .nullable()
       .optional(),
-    earnPoints: validateNumber('Earn Points', { min: 0, int: true })
-      .optional()
-      .default(0),
     emiMonthlyAmount: validateNumber('EMI Monthly Amount', {
       min: 0,
       int: true,
@@ -127,7 +124,6 @@ export const UpdateProductSchema = z
     warrantyMonths: validateNumber('Warranty Months', { min: 0, int: true })
       .nullable()
       .optional(),
-    earnPoints: validateNumber('Earn Points', { min: 0, int: true }).optional(),
     emiMonthlyAmount: validateNumber('EMI Monthly Amount', {
       min: 0,
       int: true,
@@ -246,7 +242,6 @@ export const FeaturedProductCardResponseSchema = z.object({
   regularPrice: validateNumber('Regular Price').nullable(),
   saveAmount: validateNumber('Save Amount').nullable(),
   savePercent: validateNumber('Save Percent').nullable(),
-  earnPoints: validateNumber('Earn Points'),
   availability: validateEnum('Availability', STOCK_STATUSES),
   featuredSortOrder: validateNumber('Featured Sort Order'),
 });
@@ -266,7 +261,6 @@ export const ProductResponseSchema = z.object({
   maxPrice: validateNumber('Max Price').nullable(),
   availability: validateEnum('Availability', STOCK_STATUSES),
   stockQty: validateNumber('Stock Qty'),
-  earnPoints: validateNumber('Earn Points'),
   warrantyText: validateString('Warranty Text').nullable(),
   warrantyMonths: validateNumber('Warranty Months').nullable(),
   emiMonthlyAmount: validateNumber('EMI Monthly Amount').nullable(),

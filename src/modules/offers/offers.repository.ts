@@ -125,7 +125,6 @@ export class OffersRepository {
         thumbnailUrl: schema.products.thumbnailUrl,
         price: schema.products.price,
         regularPrice: schema.products.regularPrice,
-        earnPoints: schema.products.earnPoints,
         availability: schema.products.availability,
       })
       .from(schema.offerProducts)

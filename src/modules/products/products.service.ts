@@ -172,7 +172,6 @@ export class ProductsService {
           thumbnailUrl: data.thumbnailUrl ?? null,
           warrantyText: data.warrantyText ?? null,
           warrantyMonths: data.warrantyMonths ?? null,
-          earnPoints: data.earnPoints,
           emiMonthlyAmount: data.emiMonthlyAmount ?? null,
           badges: data.badges,
           isFeatured: data.isFeatured,
@@ -467,7 +466,6 @@ export class ProductsService {
         | 'PRE_ORDER'
         | 'UPCOMING';
       stockQty: number;
-      earnPoints: number;
       warrantyText: string | null;
       warrantyMonths: number | null;
       emiMonthlyAmount: number | null;
@@ -499,7 +497,6 @@ export class ProductsService {
       maxPrice: row.maxPrice,
       availability: row.availability,
       stockQty: row.stockQty,
-      earnPoints: row.earnPoints,
       warrantyText: row.warrantyText,
       warrantyMonths: row.warrantyMonths,
       emiMonthlyAmount: row.emiMonthlyAmount,
@@ -524,7 +521,6 @@ export class ProductsService {
     thumbnailUrl: string | null;
     price: number;
     regularPrice: number | null;
-    earnPoints: number;
     availability:
       | 'IN_STOCK'
       | 'OUT_OF_STOCK'
@@ -547,7 +543,6 @@ export class ProductsService {
       regularPrice: row.regularPrice,
       saveAmount,
       savePercent,
-      earnPoints: row.earnPoints,
       availability: row.availability,
       featuredSortOrder: row.featuredSortOrder,
     };

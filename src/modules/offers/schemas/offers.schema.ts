@@ -87,7 +87,6 @@ export const OfferProductResponseSchema = z.object({
   regularPrice: validateNumber('Regular Price').nullable(),
   saveAmount: validateNumber('Save Amount').nullable(),
   savePercent: validateNumber('Save Percent').nullable(),
-  earnPoints: validateNumber('Earn Points'),
   availability: validateEnum('Availability', STOCK_STATUSES),
 });
 

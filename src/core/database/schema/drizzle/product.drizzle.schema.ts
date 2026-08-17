@@ -38,7 +38,6 @@ export const products = pgTable(
     maxPrice: integer('max_price'),
     availability: stockStatusEnum('availability').notNull().default('IN_STOCK'),
     stockQty: integer('stock_qty').notNull().default(0),
-    earnPoints: integer('earn_points').notNull().default(0),
     warrantyText: varchar('warranty_text', { length: 255 }),
     warrantyMonths: integer('warranty_months'),
     emiMonthlyAmount: integer('emi_monthly_amount'),

@@ -233,7 +233,6 @@ export class OffersService {
     thumbnailUrl: string | null;
     price: number;
     regularPrice: number | null;
-    earnPoints: number;
     availability:
       | 'IN_STOCK'
       | 'OUT_OF_STOCK'
@@ -261,7 +260,6 @@ export class OffersService {
       regularPrice,
       saveAmount,
       savePercent,
-      earnPoints: row.earnPoints,
       availability: row.availability,
     };
   }

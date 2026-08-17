@@ -31,7 +31,7 @@ type ProductSeed = {
     regularPrice?: number;
     stockQty: number;
     availability?: StockStatus;
-    earnPoints: number;
+    earnPoints?: number;
     keyFeatures?: string[];
     shortDescription?: string;
     badges?: string[];
@@ -64,7 +64,6 @@ async function insertCatalogProducts(
                     regularPrice: seed.regularPrice ?? null,
                     stockQty: seed.stockQty,
                     availability: seed.availability ?? 'IN_STOCK',
-                    earnPoints: seed.earnPoints,
                     keyFeatures: seed.keyFeatures ?? [],
                     shortDescription: seed.shortDescription ?? null,
                     badges: seed.badges ?? [],
