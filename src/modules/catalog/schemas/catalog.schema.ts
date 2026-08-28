@@ -17,6 +17,11 @@ const STOCK_STATUS_VALUES = [
 
 const AVAILABILITY_QUERY_MAP: Record<string, (typeof STOCK_STATUS_VALUES)[number]> =
   {
+    "1": 'IN_STOCK',
+    "2": 'LOW_STOCK',
+    "3": 'PRE_ORDER',
+    "4": 'UPCOMING',
+    "5": 'OUT_OF_STOCK',
     in_stock: 'IN_STOCK',
     out_of_stock: 'OUT_OF_STOCK',
     low_stock: 'LOW_STOCK',
