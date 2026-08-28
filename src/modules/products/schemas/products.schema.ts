@@ -66,7 +66,9 @@ export const CreateProductSchema = z
       .optional()
       .default([]),
     shortDescription: validateString('Short Description').nullable().optional(),
-    description: validateString('Description').nullable().optional(),
+    description: validateString('Description', { max: 100000 })
+      .nullable()
+      .optional(),
     thumbnailUrl: validateString('Thumbnail URL').nullable().optional(),
     warrantyText: validateString('Warranty Text', { max: 255 })
       .nullable()
@@ -116,7 +118,9 @@ export const UpdateProductSchema = z
       validateString('Key Feature', { max: 500 }),
     ).optional(),
     shortDescription: validateString('Short Description').nullable().optional(),
-    description: validateString('Description').nullable().optional(),
+    description: validateString('Description', { max: 100000 })
+      .nullable()
+      .optional(),
     thumbnailUrl: validateString('Thumbnail URL').nullable().optional(),
     warrantyText: validateString('Warranty Text', { max: 255 })
       .nullable()
