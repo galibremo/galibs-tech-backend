@@ -1,3 +1,5 @@
+import { eq } from 'drizzle-orm';
+
 import {
     productAttributeValues,
 } from '../schema/drizzle/attribute.drizzle.schema';
@@ -39,6 +41,102 @@ type ProductSeed = {
     extraCategorySlugs?: string[];
 };
 
+export function inferWarrantyAndDescription(
+    productCode: string,
+    name: string,
+    keyFeatures: string[] = [],
+) {
+    const prefix = productCode.toUpperCase();
+
+    let warrantyMonths = 12;
+    let warrantyText = '1 Year Official Brand Warranty';
+
+    if (prefix.startsWith('DT-')) {
+        warrantyMonths = 36;
+        warrantyText = '3 Years Official Brand & Hardware Warranty';
+    } else if (prefix.startsWith('LP-')) {
+        warrantyMonths = 24;
+        warrantyText = '2 Years Official International Manufacturer Warranty';
+    } else if (prefix.startsWith('CP-')) {
+        warrantyMonths = 36;
+        warrantyText = '3 Years Official Replacement Warranty';
+    } else if (prefix.startsWith('MN-')) {
+        warrantyMonths = 36;
+        warrantyText = '3 Years Official Panel & Parts Warranty';
+    } else if (prefix.startsWith('PH-') || prefix.startsWith('TB-')) {
+        warrantyMonths = 12;
+        warrantyText = '1 Year Official Brand Warranty';
+    } else if (prefix.startsWith('UP-')) {
+        warrantyMonths = 12;
+        warrantyText = '1 Year Unit & Battery Warranty';
+    }
+
+    const featureListHtml =
+        keyFeatures.length > 0
+            ? keyFeatures
+                  .map(
+                      (f) =>
+                          `<li><strong>${f}:</strong> High-grade performance component engineered for maximum efficiency.</li>`,
+                  )
+                  .join('\n')
+            : `<li><strong>High Performance:</strong> Engineered for precision, speed, and continuous heavy workloads.</li>
+<li><strong>Durable Construction:</strong> Built using premium heat-dissipating materials for maximum lifespan.</li>
+<li><strong>Official Support:</strong> Full backing from official authorized service centers and technical support.</li>`;
+
+    const description = `<div class="space-y-6">
+  <h2 class="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+    Explore ${name}
+  </h2>
+  <p class="text-sm sm:text-base text-muted-foreground leading-relaxed">
+    The <strong>${name}</strong> delivers top-tier responsiveness, power efficiency, and long-lasting durability tailored for modern demands. Designed with state-of-the-art engineering to handle your daily tasks and complex workflows with total ease.
+  </p>
+
+  <h3 class="text-lg font-bold text-foreground">
+    Key Highlights & Features
+  </h3>
+  <ul class="list-disc pl-5 space-y-2 text-sm text-foreground/90 leading-relaxed">
+    ${featureListHtml}
+  </ul>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-6">
+    <div class="p-4 rounded-lg bg-card border border-border">
+      <h4 class="font-bold text-sm text-primary mb-1">Official Warranty Coverage</h4>
+      <p class="text-xs text-muted-foreground">${warrantyText} included for complete peace of mind.</p>
+    </div>
+    <div class="p-4 rounded-lg bg-card border border-border">
+      <h4 class="font-bold text-sm text-primary mb-1">Energy Efficient Design</h4>
+      <p class="text-xs text-muted-foreground">Optimized thermal output and intelligent power delivery systems.</p>
+    </div>
+  </div>
+</div>`.trim();
+
+    return { warrantyText, warrantyMonths, description };
+}
+
+export async function seedProductWarrantyAndDescription(
+    database: SeedDatabase,
+): Promise<void> {
+    const allProducts = await database.select().from(products);
+    for (const p of allProducts) {
+        if (!p.warrantyText || !p.description) {
+            const { warrantyText, warrantyMonths, description } =
+                inferWarrantyAndDescription(
+                    p.productCode,
+                    p.name,
+                    p.keyFeatures ?? [],
+                );
+            await database
+                .update(products)
+                .set({
+                    warrantyText: p.warrantyText ?? warrantyText,
+                    warrantyMonths: p.warrantyMonths ?? warrantyMonths,
+                    description: p.description ?? description,
+                })
+                .where(eq(products.id, p.id));
+        }
+    }
+}
+
 async function insertCatalogProducts(
     database: SeedDatabase,
     brands: Map<string, BrandRow>,
@@ -52,6 +150,12 @@ async function insertCatalogProducts(
             seeds.map((seed) => {
                 const brand = requireBrand(brands, seed.brandSlug);
                 const category = requireCategory(categories, seed.categorySlug);
+                const { warrantyText, warrantyMonths, description } =
+                    inferWarrantyAndDescription(
+                        seed.productCode,
+                        seed.name,
+                        seed.keyFeatures ?? [],
+                    );
                 return {
                     type: seed.type,
                     productCode: seed.productCode,
@@ -66,6 +170,9 @@ async function insertCatalogProducts(
                     availability: seed.availability ?? 'IN_STOCK',
                     keyFeatures: seed.keyFeatures ?? [],
                     shortDescription: seed.shortDescription ?? null,
+                    warrantyText,
+                    warrantyMonths,
+                    description,
                     badges: seed.badges ?? [],
                     searchDocument: [
                         seed.name,

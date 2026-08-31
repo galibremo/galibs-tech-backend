@@ -5,7 +5,7 @@ import { seedAttributes } from './attributes.seed';
 import { seedBrands } from './brands.seed';
 import { seedCategories } from './categories.seed';
 import { seedProductImages } from './product-images.seed';
-import { seedProducts } from './products.seed';
+import { seedProducts, seedProductWarrantyAndDescription } from './products.seed';
 import { seedSpecifications } from './specifications.seed';
 
 /**
@@ -17,7 +17,9 @@ export async function seedDummyData(
 ): Promise<void> {
     const existingProducts = await database.query.products.findFirst();
     if (existingProducts) {
-        console.log('Dummy data seed skipped: Products already exist.');
+        console.log('Products already exist. Ensuring specifications, warranty & descriptions are seeded...');
+        await seedSpecifications(database);
+        await seedProductWarrantyAndDescription(database);
         return;
     }
 
