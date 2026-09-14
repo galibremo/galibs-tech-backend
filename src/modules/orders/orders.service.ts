@@ -88,6 +88,7 @@ export class OrdersService {
         postalCode: body.shippingAddress.postalCode ?? null,
       },
       notes: body.notes ?? null,
+      paymentMethod: body.paymentMethod ?? 'COD',
       subtotal,
       shippingFee,
       total,

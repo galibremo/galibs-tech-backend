@@ -25,6 +25,7 @@ export const ShippingAddressSchema = z.object({
 
 export const CheckoutSchema = z.object({
   shippingAddress: ShippingAddressSchema,
+  paymentMethod: z.enum(['COD', 'BKASH']).default('COD'),
   notes: validateString('Notes', { max: 1000 }).nullable().optional(),
 });
 
@@ -45,7 +46,7 @@ export const OrderItemResponseSchema = z.object({
 
 export const PaymentResponseSchema = z.object({
   id: validateUUID('Payment ID'),
-  method: z.literal('COD'),
+  method: z.enum(['COD', 'BKASH']),
   status: validateEnum('Payment Status', ['PENDING', 'PAID', 'CANCELLED']),
   amount: validateNumber('Amount', { int: true }),
 });
@@ -59,7 +60,7 @@ export const OrderResponseSchema = z.object({
     'CANCELLED',
     'COMPLETED',
   ]),
-  paymentMethod: z.literal('COD'),
+  paymentMethod: z.enum(['COD', 'BKASH']),
   paymentStatus: validateEnum('Payment Status', [
     'PENDING',
     'PAID',

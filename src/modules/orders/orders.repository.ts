@@ -31,6 +31,7 @@ export class OrdersRepository {
     guestPhone: string | null;
     shippingAddress: ShippingAddress;
     notes: string | null;
+    paymentMethod: 'COD' | 'BKASH';
     subtotal: number;
     shippingFee: number;
     total: number;
@@ -57,7 +58,7 @@ export class OrdersRepository {
           guestEmail: params.guestEmail,
           guestPhone: params.guestPhone,
           status: 'PENDING',
-          paymentMethod: 'COD',
+          paymentMethod: params.paymentMethod,
           paymentStatus: 'PENDING',
           subtotal: params.subtotal,
           shippingFee: params.shippingFee,
@@ -82,7 +83,7 @@ export class OrdersRepository {
 
       await tx.insert(schema.payments).values({
         orderId: order.id,
-        method: 'COD',
+        method: params.paymentMethod,
         status: 'PENDING',
         amount: params.total,
       });
@@ -167,7 +168,7 @@ export class OrdersRepository {
       id: order.id,
       orderNumber: order.orderNumber,
       status: order.status,
-      paymentMethod: 'COD',
+      paymentMethod: order.paymentMethod as 'COD' | 'BKASH',
       paymentStatus: order.paymentStatus,
       subtotal: order.subtotal,
       shippingFee: order.shippingFee,
@@ -187,7 +188,7 @@ export class OrdersRepository {
       payment: payment
         ? {
             id: payment.id,
-            method: 'COD' as const,
+            method: payment.method as 'COD' | 'BKASH',
             status: payment.status,
             amount: payment.amount,
           }

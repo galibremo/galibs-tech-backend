@@ -31,7 +31,7 @@ export const orderStatusEnum = pgEnum('order_status', [
   'COMPLETED',
 ]);
 
-export const paymentMethodEnum = pgEnum('payment_method', ['COD']);
+export const paymentMethodEnum = pgEnum('payment_method', ['COD', 'BKASH']);
 
 export const paymentStatusEnum = pgEnum('payment_status', [
   'PENDING',
