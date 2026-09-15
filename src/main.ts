@@ -33,6 +33,8 @@ async function bootstrap() {
       'Content-Type',
       'Authorization',
       'x-csrf-token',
+      'x-guest-token',
+      'X-Guest-Token',
       'ngrok-skip-browser-warning',
     ],
     maxAge: 3600,
