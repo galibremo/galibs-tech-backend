@@ -23,9 +23,16 @@ export const ShippingAddressSchema = z.object({
   postalCode: validateString('Postal Code', { max: 32 }).nullable().optional(),
 });
 
+export const CheckoutItemSchema = z.object({
+  productId: validateUUID('Product ID'),
+  variantId: validateUUID('Variant ID').nullable().optional(),
+  quantity: validateNumber('Quantity', { min: 1, int: true }),
+});
+
 export const CheckoutSchema = z.object({
   shippingAddress: ShippingAddressSchema,
   paymentMethod: z.enum(['COD', 'BKASH']).default('COD'),
+  items: z.array(CheckoutItemSchema).min(1, 'Cart is empty'),
   notes: validateString('Notes', { max: 1000 }).nullable().optional(),
 });
 

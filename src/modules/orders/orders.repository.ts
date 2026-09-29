@@ -44,7 +44,7 @@ export class OrdersRepository {
       unitPrice: number;
       lineTotal: number;
     }[];
-    cartId: string;
+    cartId?: string;
   }): Promise<string> {
     return this.db.transaction(async (tx) => {
       const orderNumber = this.generateOrderNumber();
@@ -106,10 +106,12 @@ export class OrdersRepository {
         }
       }
 
-      await tx
-        .update(schema.carts)
-        .set({ status: 'CONVERTED' })
-        .where(eq(schema.carts.id, params.cartId));
+      if (params.cartId) {
+        await tx
+          .update(schema.carts)
+          .set({ status: 'CONVERTED' })
+          .where(eq(schema.carts.id, params.cartId));
+      }
 
       return order.id;
     });

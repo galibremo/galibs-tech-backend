@@ -31,12 +31,7 @@ export class OrdersService {
     body: CheckoutDto,
   ): Promise<OrderResponse> {
     const shopper = await this.shopperService.resolveShopper(headers);
-    const cart = await this.cartService.getOrCreateCartWithMerge(headers);
-
-    if (!cart.items.length) {
-      throw badRequestError('Cart is empty');
-    }
-
+    // We no longer require the backend cart, we process items from payload
     const orderItems: {
       productId: string;
       variantId: string | null;
@@ -47,10 +42,10 @@ export class OrdersService {
       lineTotal: number;
     }[] = [];
 
-    for (const item of cart.items) {
+    for (const item of body.items) {
       const line = await this.catalogService.resolvePurchasable({
         productId: item.productId,
-        variantId: item.variantId,
+        variantId: item.variantId ?? null,
       });
       this.catalogService.assertInStock(line, item.quantity);
 
@@ -93,8 +88,10 @@ export class OrdersService {
       shippingFee,
       total,
       items: orderItems,
-      cartId: cart.id,
     });
+
+    // Optionally clear any existing backend cart for this session
+    await this.cartService.clearCart(headers).catch(() => {});
 
     const order = this.ordersRepository.ensureOrderFound(
       await this.ordersRepository.findOrderById(orderId),
