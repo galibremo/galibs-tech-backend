@@ -32,29 +32,29 @@ export class ProductsService {
     query: ProductsListQueryDto,
   ): Promise<ProductListResponse | FeaturedProductListResponse> {
     const page = query.page ?? 1;
-    const pageSize = query.pageSize ?? (query.featured ? 20 : 10);
+    const limit = query.limit ?? (query.featured ? 20 : 10);
 
     if (query.featured) {
       const products = await this.productsRepository.listFeaturedProducts(
         page,
-        pageSize,
+        limit,
       );
 
       return {
         rows: products.rows.map((row) => this.mapFeaturedProductCard(row)),
         total: products.total,
         page: products.page,
-        pageSize: products.pageSize,
+        limit: products.limit,
       };
     }
 
-    const products = await this.productsRepository.listProducts(page, pageSize);
+    const products = await this.productsRepository.listProducts(page, limit);
 
     return {
       rows: products.rows.map((row) => this.mapProductRow(row)),
       total: products.total,
       page: products.page,
-      pageSize: products.pageSize,
+      limit: products.limit,
     };
   }
 

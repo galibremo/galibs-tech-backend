@@ -43,7 +43,7 @@ export class SessionsService {
       rows: result.rows.map((row) => mapSessionResponse(row, currentToken)),
       total: result.total,
       page: result.page,
-      pageSize: result.pageSize,
+      limit: result.limit,
       activeOtherSessionCount,
     };
   }

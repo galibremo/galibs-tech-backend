@@ -32,17 +32,17 @@ export class AttributesService {
     query: AttributesListQueryDto,
   ): Promise<AttributeListResponse> {
     const page = query.page ?? 1;
-    const pageSize = query.pageSize ?? 10;
+    const limit = query.limit ?? 10;
     const attributes = await this.attributesRepository.listAttributes(
       page,
-      pageSize,
+      limit,
     );
 
     return {
       rows: attributes.rows,
       total: attributes.total,
       page: attributes.page,
-      pageSize: attributes.pageSize,
+      limit: attributes.limit,
     };
   }
 

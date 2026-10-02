@@ -35,12 +35,12 @@ export class EmailProvidersRepository {
     rows: EmailProviderSchemaType[];
     total: number;
     page: number;
-    pageSize: number;
+    limit: number;
   }> {
     const whereClause = this.getWhereClause(query);
     const page = query.page ?? 1;
-    const pageSize = query.pageSize ?? 10;
-    const offset = (page - 1) * pageSize;
+    const limit = query.limit ?? 10;
+    const offset = (page - 1) * limit;
     const orderBy = orderByColumn(
       schema.emailProviders,
       query.sort,
@@ -53,7 +53,7 @@ export class EmailProvidersRepository {
         .from(schema.emailProviders)
         .where(whereClause)
         .orderBy(orderBy ?? desc(schema.emailProviders.createdAt))
-        .limit(pageSize)
+        .limit(limit)
         .offset(offset),
       this.db
         .select({ value: count() })
@@ -65,7 +65,7 @@ export class EmailProvidersRepository {
       rows,
       total: Number(totalRows[0]?.value ?? 0),
       page,
-      pageSize,
+      limit,
     };
   }
 

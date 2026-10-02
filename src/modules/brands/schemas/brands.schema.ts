@@ -71,7 +71,7 @@ export const BrandListResponseSchema = z.object({
   rows: z.array(BrandResponseSchema),
   total: validateNumber('Total', { min: 0, int: true }),
   page: validateNumber('Page', { min: 1, int: true }),
-  pageSize: validateNumber('Page Size', { min: 1, int: true }),
+  limit: validateNumber('Limit', { min: 1, int: true }),
 });
 
 export const DeleteBrandResponseSchema = z.object({

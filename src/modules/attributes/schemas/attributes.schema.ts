@@ -156,7 +156,7 @@ export const AttributeListResponseSchema = z.object({
   rows: z.array(AttributeResponseSchema),
   total: validateNumber('Total', { min: 0, int: true }),
   page: validateNumber('Page', { min: 1, int: true }),
-  pageSize: validateNumber('Page Size', { min: 1, int: true }),
+  limit: validateNumber('Limit', { min: 1, int: true }),
 });
 
 export const AttributeOptionListResponseSchema = z.object({

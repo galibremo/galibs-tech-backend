@@ -61,13 +61,13 @@ export class SessionsRepository {
     rows: SessionRow[];
     total: number;
     page: number;
-    pageSize: number;
+    limit: number;
   }> {
     const now = new Date();
     const whereClause = this.getListWhere(userId, query, now);
     const page = query.page ?? 1;
-    const pageSize = query.pageSize ?? 10;
-    const offset = (page - 1) * pageSize;
+    const limit = query.limit ?? 10;
+    const offset = (page - 1) * limit;
     const orderBy = this.getOrderBy(query.sort, query.dir);
 
     const [rawRows, totalRows] = await Promise.all([
@@ -75,7 +75,7 @@ export class SessionsRepository {
         where: whereClause,
         with: { user: true },
         orderBy: orderBy ?? desc(schema.sessions.createdAt),
-        limit: pageSize,
+        limit: limit,
         offset,
       }),
       this.db
@@ -88,7 +88,7 @@ export class SessionsRepository {
       rows: rawRows.map(toSessionRow),
       total: Number(totalRows[0]?.value ?? 0),
       page,
-      pageSize,
+      limit,
     };
   }
 

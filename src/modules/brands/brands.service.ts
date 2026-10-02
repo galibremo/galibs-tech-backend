@@ -9,14 +9,14 @@ export class BrandsService {
 
     async listBrands(query: BrandsListQueryDto): Promise<BrandListResponse> {
         const page = query.page ?? 1;
-        const pageSize = query.pageSize ?? 10;
-        const brands = await this.brandsRepository.listBrands(page, pageSize);
+        const limit = query.limit ?? 10;
+        const brands = await this.brandsRepository.listBrands(page, limit);
 
         return {
             rows: brands.rows,
             total: brands.total,
             page: brands.page,
-            pageSize: brands.pageSize,
+            limit: brands.limit,
         };
     }
 

@@ -54,14 +54,14 @@ export class AttributesRepository {
 
   async listAttributes(
     page: number = 1,
-    pageSize: number = 10,
+    limit: number = 10,
   ): Promise<{
     rows: (typeof schema.attributes.$inferSelect)[];
     total: number;
     page: number;
-    pageSize: number;
+    limit: number;
   }> {
-    const offset = (page - 1) * pageSize;
+    const offset = (page - 1) * limit;
 
     const [rows, totalRows] = await Promise.all([
       this.db
@@ -71,7 +71,7 @@ export class AttributesRepository {
           asc(schema.attributes.sortOrder),
           desc(schema.attributes.createdAt),
         )
-        .limit(pageSize)
+        .limit(limit)
         .offset(offset),
       this.db.select({ value: count() }).from(schema.attributes),
     ]);
@@ -80,7 +80,7 @@ export class AttributesRepository {
       rows,
       total: Number(totalRows[0]?.value ?? 0),
       page,
-      pageSize,
+      limit,
     };
   }
 

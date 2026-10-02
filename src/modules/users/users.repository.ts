@@ -49,13 +49,13 @@ export class UsersRepository {
     rows: UserManagementRow[];
     total: number;
     page: number;
-    pageSize: number;
+    limit: number;
   }> {
     const now = new Date();
     const whereClause = this.getListUsersWhere(query);
     const page = query.page ?? 1;
-    const pageSize = query.pageSize ?? 10;
-    const offset = (page - 1) * pageSize;
+    const limit = query.limit ?? 10;
+    const offset = (page - 1) * limit;
     const activeSessionCount = this.activeSessionCountSql(now);
     const orderBy = this.getUsersOrderBy(
       query.sort,
@@ -81,7 +81,7 @@ export class UsersRepository {
           schema.users.updatedAt,
         )
         .orderBy(orderBy ?? desc(schema.users.createdAt))
-        .limit(pageSize)
+        .limit(limit)
         .offset(offset),
       this.db.select({ value: count() }).from(schema.users).where(whereClause),
     ]);
@@ -90,7 +90,7 @@ export class UsersRepository {
       rows,
       total: Number(totalRows[0]?.value ?? 0),
       page,
-      pageSize,
+      limit,
     };
   }
 

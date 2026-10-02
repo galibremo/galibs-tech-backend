@@ -37,7 +37,7 @@ Shared conventions: [README.md](./README.md)
 | `providerType` | enum above |
 | `isActive` | `"true"` \| `"false"` |
 
-Typical defaults: `page=1`, `pageSize=10`.
+Typical defaults: `page=1`, `limit=10`.
 
 ### Config (create)
 
@@ -75,7 +75,7 @@ Plus type-specific fields (strict objects):
 ### Response `data`
 
 ```ts
-{ rows: EmailProvider[]; total: number; page: number; pageSize: number }
+{ rows: EmailProvider[]; total: number; page: number; limit: number }
 ```
 
 ---
@@ -253,7 +253,7 @@ Toggles `isActive`.
 ### Response `data`
 
 ```ts
-{ rows: EmailLog[]; total: number; page: number; pageSize: number }
+{ rows: EmailLog[]; total: number; page: number; limit: number }
 ```
 
 ---
@@ -333,7 +333,7 @@ No body. Resends and returns the latest log (or original).
 ### Response `data`
 
 ```ts
-{ rows: EmailTemplate[]; total: number; page: number; pageSize: number }
+{ rows: EmailTemplate[]; total: number; page: number; limit: number }
 ```
 
 ---

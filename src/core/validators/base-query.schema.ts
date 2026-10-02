@@ -23,8 +23,8 @@ export const baseQuerySchema = (sortableFields: readonly SortableField[]) => {
   return z
     .object({
       page: validatePositiveInteger('Page').optional(),
-      pageSize: validatePositiveInteger('Page Size')
-        .max(500, 'Page Size must not exceed 500')
+      limit: validatePositiveInteger('Limit')
+        .max(500, 'Limit must not exceed 500')
         .optional(),
       sort: validateEnum('Sort By', sortValues)
         .optional()

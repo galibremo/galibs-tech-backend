@@ -58,7 +58,7 @@ export class EmailLogsService {
       rows: result.rows.map((row) => this.toResponse(row)),
       total: result.total,
       page: result.page,
-      pageSize: result.pageSize,
+      limit: result.limit,
     };
   }
 
@@ -102,7 +102,7 @@ export class EmailLogsService {
   ): Promise<EmailLogResponse | null> {
     const result = await this.repository.findByProviderId(providerId, {
       page: 1,
-      pageSize: 1,
+      limit: 1,
       sort: 'createdAt',
       dir: 'desc',
     });

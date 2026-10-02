@@ -99,7 +99,7 @@ export const SessionListResponseSchema = z.object({
   rows: validateArray('Sessions', SessionResponseSchema),
   total: validateNumber('Total', { min: 0, int: true }),
   page: validateNumber('Page', { min: 1, int: true }),
-  pageSize: validateNumber('Page Size', { min: 1, int: true }),
+  limit: validateNumber('Limit', { min: 1, int: true }),
   activeOtherSessionCount: validateNumber('Active Other Session Count', {
     min: 0,
     int: true,

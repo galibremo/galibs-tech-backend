@@ -53,15 +53,15 @@ export class OffersRepository {
       .orderBy(asc(schema.offers.sortOrder), asc(schema.offers.createdAt));
   }
 
-  async listOffers(page: number = 1, pageSize: number = 10) {
-    const offset = (page - 1) * pageSize;
+  async listOffers(page: number = 1, limit: number = 10) {
+    const offset = (page - 1) * limit;
 
     const [rows, totalRows] = await Promise.all([
       this.db
         .select()
         .from(schema.offers)
         .orderBy(desc(schema.offers.createdAt))
-        .limit(pageSize)
+        .limit(limit)
         .offset(offset),
       this.db.select({ value: count() }).from(schema.offers),
     ]);
@@ -70,7 +70,7 @@ export class OffersRepository {
       rows,
       total: Number(totalRows[0]?.value ?? 0),
       page,
-      pageSize,
+      limit,
     };
   }
 

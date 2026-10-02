@@ -83,7 +83,7 @@ Optional nested (detail responses):
 ### Response `data`
 
 ```ts
-{ rows: Product[]; total: number; page: number; pageSize: number }
+{ rows: Product[]; total: number; page: number; limit: number }
 ```
 
 ---

@@ -53,7 +53,7 @@ Shared conventions: [README.md](./README.md)
 ### Response `data`
 
 ```ts
-{ rows: Attribute[]; total: number; page: number; pageSize: number }
+{ rows: Attribute[]; total: number; page: number; limit: number }
 ```
 
 ---

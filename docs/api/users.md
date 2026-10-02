@@ -37,13 +37,13 @@ Shared conventions: [README.md](./README.md)
 ### Response `data`
 
 ```ts
-{ rows: UserManagement[]; total: number; page: number; pageSize: number }
+{ rows: UserManagement[]; total: number; page: number; limit: number }
 ```
 
 ### Example
 
 ```http
-GET /users?page=1&pageSize=20&sort=createdAt&dir=desc&role=CUSTOMER
+GET /users?page=1&limit=20&sort=createdAt&dir=desc&role=CUSTOMER
 ```
 
 ---

@@ -47,12 +47,12 @@ export class EmailTemplateRepository {
     rows: EmailTemplateSchemaType[];
     total: number;
     page: number;
-    pageSize: number;
+    limit: number;
   }> {
     const whereClause = this.getWhereClause(query);
     const page = query.page ?? 1;
-    const pageSize = query.pageSize ?? 10;
-    const offset = (page - 1) * pageSize;
+    const limit = query.limit ?? 10;
+    const offset = (page - 1) * limit;
     const orderBy = orderByColumn(
       schema.emailTemplates,
       query.sort,
@@ -65,7 +65,7 @@ export class EmailTemplateRepository {
         .from(schema.emailTemplates)
         .where(whereClause)
         .orderBy(orderBy ?? desc(schema.emailTemplates.version))
-        .limit(pageSize)
+        .limit(limit)
         .offset(offset),
       this.db
         .select({ value: count() })
@@ -77,7 +77,7 @@ export class EmailTemplateRepository {
       rows,
       total: Number(totalRows[0]?.value ?? 0),
       page,
-      pageSize,
+      limit,
     };
   }
 

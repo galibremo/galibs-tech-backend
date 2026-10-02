@@ -55,7 +55,7 @@ export class EmailTemplateService {
     rows: EmailTemplateSchemaType[];
     total: number;
     page: number;
-    pageSize: number;
+    limit: number;
   }> {
     return this.templateRepository.findAll(query);
   }

@@ -13,14 +13,14 @@ export class CategoriesService {
 
     async listCategories(query: CategoriesListQueryDto): Promise<CategoriesListResponse> {
         const page = query.page ?? 1;
-        const pageSize = query.pageSize ?? 10;
-        const categories = await this.categoriesRepository.listCategories(page, pageSize);
+        const limit = query.limit ?? 10;
+        const categories = await this.categoriesRepository.listCategories(page, limit);
 
         return {
             rows: categories.rows,
             total: categories.total,
             page: categories.page,
-            pageSize: categories.pageSize,
+            limit: categories.limit,
         };
     }
     

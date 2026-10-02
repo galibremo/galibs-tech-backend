@@ -46,7 +46,7 @@ Covers category CRUD, category tree, catalog listing/filters, and category–att
 ### Response `data`
 
 ```ts
-{ rows: Category[]; total: number; page: number; pageSize: number }
+{ rows: Category[]; total: number; page: number; limit: number }
 ```
 
 ---

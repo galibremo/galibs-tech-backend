@@ -33,7 +33,7 @@ Shared conventions: [README.md](./README.md)
 ### Response `data`
 
 ```ts
-{ rows: Brand[]; total: number; page: number; pageSize: number }
+{ rows: Brand[]; total: number; page: number; limit: number }
 ```
 
 ---

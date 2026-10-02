@@ -118,14 +118,14 @@ Many list endpoints extend this base (all optional unless noted):
 | Param | Type | Constraints |
 |-------|------|-------------|
 | `page` | integer | ≥ 1 |
-| `pageSize` | integer | ≥ 1, max **500** |
+| `limit` | integer | ≥ 1, max **500** |
 | `sort` | string | Domain-specific enum |
 | `dir` | string | `asc` \| `desc` |
 | `search` | string | Trimmed |
 | `fromDate` | date | |
 | `toDate` | date | Must be ≥ `fromDate` if both set |
 
-Defaults for page/pageSize vary by module (often `1` / `10` when applied in services).
+Defaults for page/limit vary by module (often `1` / `10` when applied in services).
 
 ## Rate limiting
 

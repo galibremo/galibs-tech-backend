@@ -37,7 +37,7 @@ export class EmailProvidersService {
       rows: result.rows.map((row) => this.toResponse(row)),
       total: result.total,
       page: result.page,
-      pageSize: result.pageSize,
+      limit: result.limit,
     };
   }
 

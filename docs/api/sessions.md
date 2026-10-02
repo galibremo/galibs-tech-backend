@@ -44,7 +44,7 @@ Shared conventions: [README.md](./README.md)
   rows: Session[];
   total: number;
   page: number;
-  pageSize: number;
+  limit: number;
   activeOtherSessionCount: number;
 }
 ```
@@ -52,7 +52,7 @@ Shared conventions: [README.md](./README.md)
 ### Example
 
 ```http
-GET /sessions?page=1&pageSize=10&status=active&sort=createdAt&dir=desc
+GET /sessions?page=1&limit=10&status=active&sort=createdAt&dir=desc
 ```
 
 ```json
@@ -78,7 +78,7 @@ GET /sessions?page=1&pageSize=10&status=active&sort=createdAt&dir=desc
     ],
     "total": 1,
     "page": 1,
-    "pageSize": 10,
+    "limit": 10,
     "activeOtherSessionCount": 0
   },
   "timestamp": "2026-08-07T06:00:00.000Z",

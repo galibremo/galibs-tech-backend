@@ -27,21 +27,21 @@ export class CategoriesRepository {
 
     async listCategories(
         page: number = 1,
-        pageSize: number = 10,
+        limit: number = 10,
     ): Promise<{
         rows: typeof schema.categories.$inferSelect[];
         total: number;
         page: number;
-        pageSize: number;
+        limit: number;
     }> {
-        const offset = (page - 1) * pageSize;
+        const offset = (page - 1) * limit;
 
         const [rows, totalRows] = await Promise.all([
             this.db
                 .select()
                 .from(schema.categories)
                 .orderBy(desc(schema.categories.createdAt))
-                .limit(pageSize)
+                .limit(limit)
                 .offset(offset),
             this.db.select({ value: count() }).from(schema.categories),
         ]);
@@ -50,7 +50,7 @@ export class CategoriesRepository {
             rows,
             total: Number(totalRows[0]?.value ?? 0),
             page,
-            pageSize,
+            limit,
         };
     }
     

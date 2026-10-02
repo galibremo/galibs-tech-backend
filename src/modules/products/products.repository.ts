@@ -115,14 +115,14 @@ export class ProductsRepository {
 
   async listProducts(
     page: number = 1,
-    pageSize: number = 10,
+    limit: number = 10,
   ): Promise<{
     rows: (typeof schema.products.$inferSelect)[];
     total: number;
     page: number;
-    pageSize: number;
+    limit: number;
   }> {
-    const offset = (page - 1) * pageSize;
+    const offset = (page - 1) * limit;
     const notDeleted = isNull(schema.products.deletedAt);
 
     const [rows, totalRows] = await Promise.all([
@@ -131,7 +131,7 @@ export class ProductsRepository {
         .from(schema.products)
         .where(notDeleted)
         .orderBy(desc(schema.products.createdAt))
-        .limit(pageSize)
+        .limit(limit)
         .offset(offset),
       this.db
         .select({ value: count() })
@@ -143,20 +143,20 @@ export class ProductsRepository {
       rows,
       total: Number(totalRows[0]?.value ?? 0),
       page,
-      pageSize,
+      limit,
     };
   }
 
   async listFeaturedProducts(
     page: number = 1,
-    pageSize: number = 20,
+    limit: number = 20,
   ): Promise<{
     rows: (typeof schema.products.$inferSelect)[];
     total: number;
     page: number;
-    pageSize: number;
+    limit: number;
   }> {
-    const offset = (page - 1) * pageSize;
+    const offset = (page - 1) * limit;
     const featuredCondition = and(
       isNull(schema.products.deletedAt),
       eq(schema.products.isActive, true),
@@ -172,7 +172,7 @@ export class ProductsRepository {
           asc(schema.products.featuredSortOrder),
           asc(schema.products.createdAt),
         )
-        .limit(pageSize)
+        .limit(limit)
         .offset(offset),
       this.db
         .select({ value: count() })
@@ -184,7 +184,7 @@ export class ProductsRepository {
       rows,
       total: Number(totalRows[0]?.value ?? 0),
       page,
-      pageSize,
+      limit,
     };
   }
 

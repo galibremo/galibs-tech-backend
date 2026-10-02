@@ -31,7 +31,7 @@ export class UsersService {
       rows: users.rows.map(mapUserManagementResponse),
       total: users.total,
       page: users.page,
-      pageSize: users.pageSize,
+      limit: users.limit,
     };
   }
 

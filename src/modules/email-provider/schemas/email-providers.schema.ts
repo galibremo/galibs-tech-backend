@@ -286,7 +286,7 @@ const EmailProviderListResponseSchema = z.object({
 	rows: validateArray('Email Providers', EmailProviderResponseSchema),
 	total: validateNumber('Total', { min: 0, int: true }),
 	page: validateNumber('Page', { min: 1, int: true }),
-	pageSize: validateNumber('Page Size', { min: 1, int: true }),
+	limit: validateNumber('Limit', { min: 1, int: true }),
 });
 const TestConnectionResponseSchema = z.object({
 	success: validateBoolean('Success'),

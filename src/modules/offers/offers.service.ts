@@ -42,14 +42,14 @@ export class OffersService {
 
   async listOffers(query: OffersListQueryDto): Promise<OffersListResponse> {
     const page = query.page ?? 1;
-    const pageSize = query.pageSize ?? 10;
-    const result = await this.offersRepository.listOffers(page, pageSize);
+    const limit = query.limit ?? 10;
+    const result = await this.offersRepository.listOffers(page, limit);
 
     return {
       rows: result.rows.map((row) => this.mapOffer(row)),
       total: result.total,
       page: result.page,
-      pageSize: result.pageSize,
+      limit: result.limit,
     };
   }
 

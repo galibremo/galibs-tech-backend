@@ -36,12 +36,12 @@ export class EmailLogsRepository {
     rows: EmailLogSchemaType[];
     total: number;
     page: number;
-    pageSize: number;
+    limit: number;
   }> {
     const whereClause = this.getWhereClause(providerId, query);
     const page = query.page ?? 1;
-    const pageSize = query.pageSize ?? 10;
-    const offset = (page - 1) * pageSize;
+    const limit = query.limit ?? 10;
+    const offset = (page - 1) * limit;
     const orderBy = orderByColumn(
       schema.emailLogs,
       query.sort,
@@ -54,7 +54,7 @@ export class EmailLogsRepository {
         .from(schema.emailLogs)
         .where(whereClause)
         .orderBy(orderBy ?? desc(schema.emailLogs.createdAt))
-        .limit(pageSize)
+        .limit(limit)
         .offset(offset),
       this.db
         .select({ value: count() })
@@ -66,7 +66,7 @@ export class EmailLogsRepository {
       rows,
       total: Number(totalRows[0]?.value ?? 0),
       page,
-      pageSize,
+      limit,
     };
   }
 
@@ -74,12 +74,12 @@ export class EmailLogsRepository {
     rows: EmailLogSchemaType[];
     total: number;
     page: number;
-    pageSize: number;
+    limit: number;
   }> {
     const whereClause = this.getWhereClause(undefined, query);
     const page = query.page ?? 1;
-    const pageSize = query.pageSize ?? 10;
-    const offset = (page - 1) * pageSize;
+    const limit = query.limit ?? 10;
+    const offset = (page - 1) * limit;
     const orderBy = orderByColumn(
       schema.emailLogs,
       query.sort,
@@ -92,7 +92,7 @@ export class EmailLogsRepository {
         .from(schema.emailLogs)
         .where(whereClause)
         .orderBy(orderBy ?? desc(schema.emailLogs.createdAt))
-        .limit(pageSize)
+        .limit(limit)
         .offset(offset),
       this.db
         .select({ value: count() })
@@ -104,7 +104,7 @@ export class EmailLogsRepository {
       rows,
       total: Number(totalRows[0]?.value ?? 0),
       page,
-      pageSize,
+      limit,
     };
   }
 
