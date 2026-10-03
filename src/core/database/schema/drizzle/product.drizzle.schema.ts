@@ -10,12 +10,20 @@ import {
   uniqueIndex,
   uuid,
   varchar,
+  customType,
 } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 
 import { timestamps } from '../../helpers';
 import { brands } from './brand.drizzle.schema';
 import { categories } from './category.drizzle.schema';
 import { productTypeEnum, stockStatusEnum } from './enum.drizzle.schema';
+
+export const tsvector = customType<{ data: string }>({
+  dataType() {
+    return 'tsvector';
+  },
+});
 
 export const products = pgTable(
   'products',
@@ -46,6 +54,13 @@ export const products = pgTable(
     shortDescription: text('short_description'),
     description: text('description'),
     searchDocument: text('search_document'),
+    searchVector: tsvector('search_vector').generatedAlwaysAs(
+      sql`
+        setweight(to_tsvector('english', coalesce(name, '')), 'A') ||
+        setweight(to_tsvector('english', coalesce(short_description, '')), 'B') ||
+        setweight(to_tsvector('english', coalesce(search_document, '')), 'C')
+      `,
+    ),
     isActive: boolean('is_active').notNull().default(true),
     isFeatured: boolean('is_featured').notNull().default(false),
     featuredSortOrder: integer('featured_sort_order').notNull().default(0),
@@ -68,6 +83,12 @@ export const products = pgTable(
       table.featuredSortOrder,
     ),
     index('products_deleted_at_idx').on(table.deletedAt),
+    index('products_search_vector_idx').using('gin', table.searchVector),
+    index('products_name_trgm_idx').using('gin', table.name.op('gin_trgm_ops')),
+    index('products_search_doc_trgm_idx').using(
+      'gin',
+      table.searchDocument.op('gin_trgm_ops'),
+    ),
   ],
 );
 

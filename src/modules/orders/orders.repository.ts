@@ -170,7 +170,7 @@ export class OrdersRepository {
       id: order.id,
       orderNumber: order.orderNumber,
       status: order.status,
-      paymentMethod: order.paymentMethod as 'COD' | 'BKASH',
+      paymentMethod: order.paymentMethod,
       paymentStatus: order.paymentStatus,
       subtotal: order.subtotal,
       shippingFee: order.shippingFee,
@@ -190,7 +190,7 @@ export class OrdersRepository {
       payment: payment
         ? {
             id: payment.id,
-            method: payment.method as 'COD' | 'BKASH',
+            method: payment.method,
             status: payment.status,
             amount: payment.amount,
           }

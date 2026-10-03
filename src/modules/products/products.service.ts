@@ -33,6 +33,7 @@ export class ProductsService {
   ): Promise<ProductListResponse | FeaturedProductListResponse> {
     const page = query.page ?? 1;
     const limit = query.limit ?? (query.featured ? 20 : 10);
+    const search = query.search;
 
     if (query.featured) {
       const products = await this.productsRepository.listFeaturedProducts(
@@ -48,7 +49,7 @@ export class ProductsService {
       };
     }
 
-    const products = await this.productsRepository.listProducts(page, limit);
+    const products = await this.productsRepository.listProducts(page, limit, search);
 
     return {
       rows: products.rows.map((row) => this.mapProductRow(row)),

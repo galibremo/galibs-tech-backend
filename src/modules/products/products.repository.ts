@@ -7,6 +7,10 @@ import {
   eq,
   inArray,
   isNull,
+  ilike,
+  or,
+  sql,
+  getTableColumns,
 } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
@@ -14,6 +18,12 @@ import { DRIZZLE_DATABASE_CONNECTION } from 'src/core/database/drizzle/drizzle.t
 import schema from 'src/core/database/drizzle/drizzle.schema';
 
 export type ProductsDatabase = NodePgDatabase<typeof schema>;
+export type ProductResponse = Omit<
+  typeof schema.products.$inferSelect,
+  'searchVector'
+>;
+
+export const { searchVector: _searchVector, ...publicProductColumns } = getTableColumns(schema.products);
 
 @Injectable()
 export class ProductsRepository {
@@ -48,27 +58,25 @@ export class ProductsRepository {
       .where(inArray(schema.categories.id, ids));
   }
 
-  findProductById(
-    id: string,
-  ): Promise<typeof schema.products.$inferSelect | undefined> {
+  findProductById(id: string): Promise<ProductResponse | undefined> {
     return this.db.query.products.findFirst({
-      where: and(
-        eq(schema.products.id, id),
-        isNull(schema.products.deletedAt),
-      ),
+      columns: { searchVector: false },
+      where: and(eq(schema.products.id, id), isNull(schema.products.deletedAt)),
     });
   }
 
   findProductByIdIncludingDeleted(
     id: string,
-  ): Promise<typeof schema.products.$inferSelect | undefined> {
+  ): Promise<ProductResponse | undefined> {
     return this.db.query.products.findFirst({
+      columns: { searchVector: false },
       where: eq(schema.products.id, id),
     });
   }
 
   findProductDetailBySlug(slug: string) {
     return this.db.query.products.findFirst({
+      columns: { searchVector: false },
       where: and(
         eq(schema.products.slug, slug),
         isNull(schema.products.deletedAt),
@@ -116,27 +124,63 @@ export class ProductsRepository {
   async listProducts(
     page: number = 1,
     limit: number = 10,
+    search?: string,
   ): Promise<{
-    rows: (typeof schema.products.$inferSelect)[];
+    rows: ProductResponse[];
     total: number;
     page: number;
     limit: number;
   }> {
     const offset = (page - 1) * limit;
-    const notDeleted = isNull(schema.products.deletedAt);
+    const term = search?.trim();
+
+    const conditions = [isNull(schema.products.deletedAt)];
+
+    // reused in WHERE and ORDER BY
+    const tsQuery = term ? sql`websearch_to_tsquery('english', ${term})` : null;
+    const rank = tsQuery
+      ? sql`ts_rank(${schema.products.searchVector}, ${tsQuery})`
+      : null;
+
+    if (term && tsQuery) {
+      const termForIlike = term.replace(/[%_]/g, '\\$&');
+      conditions.push(
+        or(
+          // 1. word-based match: "shoe running" finds "Running Shoes"
+          sql`${schema.products.searchVector} @@ ${tsQuery}`,
+          // 2. partial match: "galax" finds "Galaxy"
+          ilike(schema.products.name, `%${termForIlike}%`),
+          ilike(schema.products.searchDocument, `%${termForIlike}%`),
+          // 3. typo match (word similarity handles long names better): "samsng" finds "Samsung Galaxy..."
+          sql`${term} <% ${schema.products.name}`,
+          // 4. your existing category match
+          inArray(
+            schema.products.primaryCategoryId,
+            this.db
+              .select({ id: schema.categories.id })
+              .from(schema.categories)
+              .where(ilike(schema.categories.name, `%${termForIlike}%`)),
+          ),
+        )!,
+      );
+    }
+
+    const where = and(...conditions);
+
+    // when searching, best matches first; otherwise newest first
+    const orderBy = rank
+      ? [desc(rank), desc(schema.products.createdAt), desc(schema.products.id)]
+      : [desc(schema.products.createdAt), desc(schema.products.id)];
 
     const [rows, totalRows] = await Promise.all([
       this.db
-        .select()
+        .select(publicProductColumns)
         .from(schema.products)
-        .where(notDeleted)
-        .orderBy(desc(schema.products.createdAt))
+        .where(where)
+        .orderBy(...orderBy)
         .limit(limit)
         .offset(offset),
-      this.db
-        .select({ value: count() })
-        .from(schema.products)
-        .where(notDeleted),
+      this.db.select({ value: count() }).from(schema.products).where(where),
     ]);
 
     return {
@@ -151,7 +195,7 @@ export class ProductsRepository {
     page: number = 1,
     limit: number = 20,
   ): Promise<{
-    rows: (typeof schema.products.$inferSelect)[];
+    rows: ProductResponse[];
     total: number;
     page: number;
     limit: number;
@@ -165,12 +209,13 @@ export class ProductsRepository {
 
     const [rows, totalRows] = await Promise.all([
       this.db
-        .select()
+        .select(publicProductColumns)
         .from(schema.products)
         .where(featuredCondition)
         .orderBy(
           asc(schema.products.featuredSortOrder),
           asc(schema.products.createdAt),
+          desc(schema.products.id),
         )
         .limit(limit)
         .offset(offset),
@@ -190,7 +235,7 @@ export class ProductsRepository {
 
   async createProductWithPrimaryCategory(
     data: typeof schema.products.$inferInsert,
-  ): Promise<typeof schema.products.$inferSelect | undefined> {
+  ): Promise<ProductResponse | undefined> {
     return this.db.transaction(async (tx) => {
       const [created] = await tx
         .insert(schema.products)
@@ -212,18 +257,16 @@ export class ProductsRepository {
   async updateProduct(
     id: string,
     data: Partial<typeof schema.products.$inferInsert>,
-  ): Promise<typeof schema.products.$inferSelect | undefined> {
+  ): Promise<ProductResponse | undefined> {
     return this.db
       .update(schema.products)
       .set(data)
       .where(and(eq(schema.products.id, id), isNull(schema.products.deletedAt)))
-      .returning()
-      .then((rows) => rows[0]);
+      .returning(publicProductColumns)
+      .then((rows) => rows[0] as ProductResponse);
   }
 
-  async softDeleteProduct(
-    id: string,
-  ): Promise<typeof schema.products.$inferSelect | undefined> {
+  async softDeleteProduct(id: string): Promise<ProductResponse | undefined> {
     return this.db
       .update(schema.products)
       .set({
@@ -231,8 +274,8 @@ export class ProductsRepository {
         isActive: false,
       })
       .where(and(eq(schema.products.id, id), isNull(schema.products.deletedAt)))
-      .returning()
-      .then((rows) => rows[0]);
+      .returning(publicProductColumns)
+      .then((rows) => rows[0] as ProductResponse);
   }
 
   async addProductImage(
@@ -357,10 +400,7 @@ export class ProductsRepository {
       .from(schema.productAttributeValues)
       .innerJoin(
         schema.attributes,
-        eq(
-          schema.productAttributeValues.attributeId,
-          schema.attributes.id,
-        ),
+        eq(schema.productAttributeValues.attributeId, schema.attributes.id),
       )
       .innerJoin(
         schema.attributeOptions,
@@ -370,16 +410,10 @@ export class ProductsRepository {
         ),
       )
       .where(eq(schema.productAttributeValues.productId, productId))
-      .orderBy(
-        schema.attributes.sortOrder,
-        schema.attributeOptions.sortOrder,
-      );
+      .orderBy(schema.attributes.sortOrder, schema.attributeOptions.sortOrder);
   }
 
-  async syncBrandFromOption(
-    productId: string,
-    brandId: string,
-  ): Promise<void> {
+  async syncBrandFromOption(productId: string, brandId: string): Promise<void> {
     await this.db
       .update(schema.products)
       .set({ brandId })
