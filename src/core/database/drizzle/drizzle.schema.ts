@@ -7,6 +7,7 @@ import * as CategoryDrizzleSchema from '../schema/drizzle/category.drizzle.schem
 import * as CommerceDrizzleSchema from '../schema/drizzle/commerce.drizzle.schema';
 import * as EmailDrizzleSchema from '../schema/drizzle/email.drizzle.schema';
 import * as EnumDrizzleSchema from '../schema/drizzle/enum.drizzle.schema';
+import * as NewsletterDrizzleSchema from '../schema/drizzle/newsletter.drizzle.schema';
 import * as OffersDrizzleSchema from '../schema/drizzle/offers.drizzle.schema';
 import * as ProductDrizzleSchema from '../schema/drizzle/product.drizzle.schema';
 import * as PromotionalDrizzleSchema from '../schema/drizzle/promotional.drizzle.schema';
@@ -22,6 +23,7 @@ const schema = {
 	...CommerceDrizzleSchema,
 	...EmailDrizzleSchema,
 	...EnumDrizzleSchema,
+	...NewsletterDrizzleSchema,
 	...OffersDrizzleSchema,
 	...ProductDrizzleSchema,
 	...PromotionalDrizzleSchema,

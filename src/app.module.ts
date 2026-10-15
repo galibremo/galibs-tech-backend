@@ -28,6 +28,7 @@ import { CartModule } from './modules/cart/cart.module';
 import { WishlistModule } from './modules/wishlist/wishlist.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { CommerceModule } from './modules/commerce/commerce.module';
+import { NewsletterModule } from './modules/newsletter/newsletter.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { CommerceModule } from './modules/commerce/commerce.module';
     CartModule,
     WishlistModule,
     OrdersModule,
+    NewsletterModule,
   ],
   controllers: [],
   providers: [
