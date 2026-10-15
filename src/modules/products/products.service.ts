@@ -517,6 +517,7 @@ export class ProductsService {
 
   private mapFeaturedProductCard(row: {
     id: string;
+    type: 'SIMPLE' | 'VARIABLE';
     name: string;
     slug: string;
     thumbnailUrl: string | null;
@@ -537,6 +538,7 @@ export class ProductsService {
 
     return {
       id: row.id,
+      type: row.type,
       name: row.name,
       slug: row.slug,
       thumbnailUrl: row.thumbnailUrl,

@@ -239,6 +239,7 @@ export const ProductVariantSummarySchema = z.object({
 
 export const FeaturedProductCardResponseSchema = z.object({
   id: validateUUID('Product ID'),
+  type: validateEnum('Type', PRODUCT_TYPES),
   name: validateString('Name'),
   slug: validateString('Slug'),
   thumbnailUrl: validateString('Thumbnail URL').nullable(),
