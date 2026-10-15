@@ -4,6 +4,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 import { DRIZZLE_DATABASE_CONNECTION } from 'src/core/database/drizzle/drizzle.tokens';
 import schema from 'src/core/database/drizzle/drizzle.schema';
+import { buildLineName } from './helpers/line-name';
 import {
   badRequestError,
   notFoundError,
@@ -69,7 +70,7 @@ export class CommerceCatalogService {
       return {
         productId: product.id,
         variantId: variant.id,
-        name: `${product.name} - ${variant.title}`,
+        name: buildLineName(product.name, variant.title),
         sku: variant.sku,
         unitPrice: variant.price,
         stockQty: variant.stockQty,

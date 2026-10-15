@@ -1,6 +1,7 @@
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 import schema from '../drizzle/drizzle.schema';
+import { buildVariantTitle } from '../../../modules/variants/helpers/build-variant-title';
 import {
     productVariants,
     productOptionGroups,
@@ -181,7 +182,9 @@ export async function seedVariantMatrix(
                 return {
                     productId: product.id,
                     sku: `${product.productCode}-${skuSuffix}`,
-                    title: `${product.name} - ${labels.join(', ')}`,
+                    // Option labels only ("32GB / 512GB"); the product name is
+                    // prefixed at display time (see commerce/helpers/line-name.ts).
+                    title: buildVariantTitle(labels),
                     fingerprint: combo.valueSlugs.join('|'),
                     price: combo.price,
                     regularPrice: combo.regularPrice ?? null,

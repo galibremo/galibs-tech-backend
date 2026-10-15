@@ -5,6 +5,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DRIZZLE_DATABASE_CONNECTION } from 'src/core/database/drizzle/drizzle.tokens';
 import schema from 'src/core/database/drizzle/drizzle.schema';
 import { notFoundError } from '../../core/errors/domain-error';
+import { buildLineName } from '../commerce/helpers/line-name';
 import type { ShopperContext } from '../commerce/commerce-shopper.service';
 import type { CartResponse } from './schemas/cart.schema';
 
@@ -208,7 +209,7 @@ export class CartRepository {
     const items = cart.items.map((item) => {
       const name =
         item.variant != null
-          ? `${item.product.name} - ${item.variant.title}`
+          ? buildLineName(item.product.name, item.variant.title)
           : item.product.name;
       const sku =
         item.variant?.sku ?? item.product.sku ?? item.product.productCode;
