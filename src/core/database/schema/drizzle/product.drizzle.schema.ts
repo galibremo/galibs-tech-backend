@@ -125,8 +125,12 @@ export const productCategories = pgTable(
     isPrimary: boolean('is_primary').notNull().default(false),
   },
   (table) => [
-    primaryKey({ columns: [table.productId, table.categoryId] }),
-    index('product_categories_category_idx').on(table.categoryId),
+    // Composite keys are declared in alphabetical column order: drizzle-kit
+    // reads them back from Postgres 18 in that order, and a different order
+    // makes `db:push` drop and re-create the key on every run. This key now
+    // also covers the former product_categories_category_idx; per-product
+    // lookups are served by product_categories_primary_idx.
+    primaryKey({ columns: [table.categoryId, table.productId] }),
     index('product_categories_primary_idx').on(table.productId, table.isPrimary),
   ],
 );

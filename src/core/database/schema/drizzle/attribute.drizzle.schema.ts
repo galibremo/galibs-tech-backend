@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  foreignKey,
   index,
   integer,
   numeric,
@@ -76,8 +77,12 @@ export const categoryAttributes = pgTable(
     showProductCount: boolean("show_product_count").notNull().default(true),
   },
   (table) => [
-    primaryKey({ columns: [table.categoryId, table.attributeId] }),
-    index("category_attributes_attr_idx").on(table.attributeId),
+    // Composite keys are declared in alphabetical column order: drizzle-kit
+    // reads them back from Postgres 18 in that order, and a different order
+    // makes `db:push` drop and re-create the key on every run.
+    primaryKey({ columns: [table.attributeId, table.categoryId] }),
+    // The key now leads with attribute_id, so category lookups need their own index.
+    index("category_attributes_category_idx").on(table.categoryId),
   ],
 );
 
@@ -90,18 +95,21 @@ export const productAttributeValues = pgTable(
     attributeId: uuid("attribute_id")
       .notNull()
       .references(() => attributes.id, { onDelete: "cascade" }),
-    attributeOptionId: uuid("attribute_option_id")
-      .notNull()
-      .references(() => attributeOptions.id, { onDelete: "cascade" }),
+    // FK declared below with an explicit name: the generated one exceeds
+    // Postgres's 63-char identifier limit and gets truncated.
+    attributeOptionId: uuid("attribute_option_id").notNull(),
   },
   (table) => [
-    primaryKey({
-      columns: [table.productId, table.attributeOptionId],
-    }),
-    index("pav_option_product_idx").on(table.attributeOptionId, table.productId),
+    // Alphabetical column order (see categoryAttributes). This key now also
+    // covers the former pav_option_product_idx / pav_option_only_idx.
+    primaryKey({ columns: [table.attributeOptionId, table.productId] }),
+    foreignKey({
+      name: "pav_attribute_option_fk",
+      columns: [table.attributeOptionId],
+      foreignColumns: [attributeOptions.id],
+    }).onDelete("cascade"),
     index("pav_product_attr_idx").on(table.productId, table.attributeId),
     index("pav_attr_option_idx").on(table.attributeId, table.attributeOptionId),
-    index("pav_option_only_idx").on(table.attributeOptionId),
   ],
 );
 
@@ -117,8 +125,11 @@ export const productNumericAttributes = pgTable(
     value: numeric("value", { precision: 18, scale: 4 }).notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.productId, table.attributeId] }),
+    // Alphabetical column order (see categoryAttributes).
+    primaryKey({ columns: [table.attributeId, table.productId] }),
     index("product_numeric_attr_value_idx").on(table.attributeId, table.value),
+    // The key now leads with attribute_id, so per-product lookups need their own index.
+    index("product_numeric_attributes_product_idx").on(table.productId),
   ],
 );
 
@@ -128,15 +139,22 @@ export const categoryFacetCounts = pgTable(
     categoryId: uuid("category_id")
       .notNull()
       .references(() => categories.id, { onDelete: "cascade" }),
-    attributeOptionId: uuid("attribute_option_id")
-      .notNull()
-      .references(() => attributeOptions.id, { onDelete: "cascade" }),
+    // FK declared below with an explicit name (generated name exceeds 63 chars).
+    attributeOptionId: uuid("attribute_option_id").notNull(),
     productCount: integer("product_count").notNull().default(0),
     ...timestamps,
   },
   (table) => [
-    primaryKey({ columns: [table.categoryId, table.attributeOptionId] }),
-    index("category_facet_counts_option_idx").on(table.attributeOptionId),
+    // Alphabetical column order (see categoryAttributes). This key now also
+    // covers the former category_facet_counts_option_idx.
+    primaryKey({ columns: [table.attributeOptionId, table.categoryId] }),
+    foreignKey({
+      name: "cfc_attribute_option_fk",
+      columns: [table.attributeOptionId],
+      foreignColumns: [attributeOptions.id],
+    }).onDelete("cascade"),
+    // The key now leads with attribute_option_id, so per-category lookups need their own index.
+    index("category_facet_counts_category_idx").on(table.categoryId),
     index("category_facet_counts_nonzero_idx")
       .on(table.categoryId, table.productCount)
       .where(sql`${table.productCount} > 0`),

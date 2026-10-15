@@ -1,4 +1,5 @@
 import {
+  index,
   integer,
   pgTable,
   primaryKey,
@@ -39,6 +40,11 @@ export const productSpecifications = pgTable(
     value: text('value').notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.productId, table.fieldId] }),
+    // Composite keys are declared in alphabetical column order: drizzle-kit
+    // reads them back from Postgres 18 in that order, and a different order
+    // makes `db:push` drop and re-create the key on every run.
+    primaryKey({ columns: [table.fieldId, table.productId] }),
+    // The key now leads with field_id, so per-product lookups need their own index.
+    index('product_specifications_product_idx').on(table.productId),
   ],
 );

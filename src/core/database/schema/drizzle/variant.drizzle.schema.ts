@@ -1,5 +1,6 @@
 import {
   boolean,
+  foreignKey,
   index,
   integer,
   pgTable,
@@ -53,14 +54,17 @@ export const productOptionValues = pgTable(
     label: varchar('label', { length: 160 }).notNull(),
     slug: varchar('slug', { length: 180 }).notNull(),
     swatchValue: varchar('swatch_value', { length: 64 }),
-    attributeOptionId: uuid('attribute_option_id').references(
-      () => attributeOptions.id,
-      { onDelete: 'set null' },
-    ),
+    // FK declared below with an explicit name (generated name exceeds 63 chars).
+    attributeOptionId: uuid('attribute_option_id'),
     sortOrder: integer('sort_order').notNull().default(0),
     ...timestamps,
   },
   (table) => [
+    foreignKey({
+      name: 'pov_attribute_option_fk',
+      columns: [table.attributeOptionId],
+      foreignColumns: [attributeOptions.id],
+    }).onDelete('set null'),
     uniqueIndex('product_option_values_group_slug_uidx').on(
       table.groupId,
       table.slug,
@@ -106,34 +110,57 @@ export const productVariantOptionValues = pgTable(
     variantId: uuid('variant_id')
       .notNull()
       .references(() => productVariants.id, { onDelete: 'cascade' }),
-    optionValueId: uuid('option_value_id')
-      .notNull()
-      .references(() => productOptionValues.id, { onDelete: 'restrict' }),
+    // FK declared below with an explicit name (generated name exceeds 63 chars).
+    optionValueId: uuid('option_value_id').notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.variantId, table.optionValueId] }),
-    index('product_variant_option_values_value_idx').on(table.optionValueId),
+    // Composite keys are declared in alphabetical column order: drizzle-kit
+    // reads them back from Postgres 18 in that order, and a different order
+    // makes `db:push` drop and re-create the key on every run. This key now
+    // also covers the former product_variant_option_values_value_idx.
+    primaryKey({ columns: [table.optionValueId, table.variantId] }),
+    foreignKey({
+      name: 'pvov_option_value_fk',
+      columns: [table.optionValueId],
+      foreignColumns: [productOptionValues.id],
+    }).onDelete('restrict'),
+    // The key now leads with option_value_id, so per-variant lookups need their own index.
+    index('product_variant_option_values_variant_idx').on(table.variantId),
   ],
 );
 
 export const productVariantAttributeValues = pgTable(
   'product_variant_attribute_values',
   {
-    variantId: uuid('variant_id')
-      .notNull()
-      .references(() => productVariants.id, { onDelete: 'cascade' }),
+    // Both FKs declared below with explicit names (generated names exceed 63 chars).
+    variantId: uuid('variant_id').notNull(),
     attributeId: uuid('attribute_id')
       .notNull()
       .references(() => attributes.id, { onDelete: 'cascade' }),
-    attributeOptionId: uuid('attribute_option_id')
-      .notNull()
-      .references(() => attributeOptions.id, { onDelete: 'cascade' }),
+    attributeOptionId: uuid('attribute_option_id').notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.variantId, table.attributeOptionId] }),
+    // Alphabetical column order (see productVariantOptionValues). The
+    // generated name would exceed 63 chars, hence the explicit one.
+    primaryKey({
+      name: 'pvav_pk',
+      columns: [table.attributeOptionId, table.variantId],
+    }),
+    foreignKey({
+      name: 'pvav_variant_fk',
+      columns: [table.variantId],
+      foreignColumns: [productVariants.id],
+    }).onDelete('cascade'),
+    foreignKey({
+      name: 'pvav_attribute_option_fk',
+      columns: [table.attributeOptionId],
+      foreignColumns: [attributeOptions.id],
+    }).onDelete('cascade'),
     index('product_variant_attr_values_attr_idx').on(
       table.attributeId,
       table.attributeOptionId,
     ),
+    // The key now leads with attribute_option_id, so per-variant lookups need their own index.
+    index('product_variant_attribute_values_variant_idx').on(table.variantId),
   ],
 );
