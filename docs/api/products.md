@@ -55,6 +55,7 @@ Optional nested (detail responses):
 | Param | Type | Notes |
 |-------|------|-------|
 | `featured` | `true` \| `false` | When `true`, returns featured homepage grid cards with `saveAmount` / `savePercent` |
+| `brand` | string (brand slug) | Only products of that brand. An unknown slug returns an empty list (`total: 0`), not a 404. Ignored when `featured=true`. |
 
 ---
 

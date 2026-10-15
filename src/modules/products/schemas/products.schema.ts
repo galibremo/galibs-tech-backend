@@ -38,6 +38,8 @@ export const ProductsListQuerySchema = baseQuerySchema(
     .enum(['true', 'false'])
     .optional()
     .transform((value) => value === 'true'),
+  /** Brand slug; limits the list to that brand's products. */
+  brand: z.string().trim().min(1).max(160).optional(),
 });
 
 export const CreateProductSchema = z

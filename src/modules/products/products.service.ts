@@ -35,6 +35,16 @@ export class ProductsService {
     const limit = query.limit ?? (query.featured ? 20 : 10);
     const search = query.search;
 
+    let brandId: string | undefined;
+    if (query.brand) {
+      const brand = await this.productsRepository.findBrandBySlug(query.brand);
+      if (!brand) {
+        // Unknown brand slug: an empty list, not an error, so the page renders.
+        return { rows: [], total: 0, page, limit };
+      }
+      brandId = brand.id;
+    }
+
     if (query.featured) {
       const products = await this.productsRepository.listFeaturedProducts(
         page,
@@ -49,7 +59,12 @@ export class ProductsService {
       };
     }
 
-    const products = await this.productsRepository.listProducts(page, limit, search);
+    const products = await this.productsRepository.listProducts(
+      page,
+      limit,
+      search,
+      brandId,
+    );
 
     return {
       rows: products.rows.map((row) => this.mapProductRow(row)),

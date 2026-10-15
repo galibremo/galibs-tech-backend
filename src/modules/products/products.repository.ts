@@ -40,6 +40,14 @@ export class ProductsRepository {
     });
   }
 
+  findBrandBySlug(
+    slug: string,
+  ): Promise<typeof schema.brands.$inferSelect | undefined> {
+    return this.db.query.brands.findFirst({
+      where: eq(schema.brands.slug, slug),
+    });
+  }
+
   findCategoryById(
     id: string,
   ): Promise<typeof schema.categories.$inferSelect | undefined> {
@@ -125,6 +133,7 @@ export class ProductsRepository {
     page: number = 1,
     limit: number = 10,
     search?: string,
+    brandId?: string,
   ): Promise<{
     rows: ProductResponse[];
     total: number;
@@ -135,6 +144,10 @@ export class ProductsRepository {
     const term = search?.trim();
 
     const conditions = [isNull(schema.products.deletedAt)];
+
+    if (brandId) {
+      conditions.push(eq(schema.products.brandId, brandId));
+    }
 
     // reused in WHERE and ORDER BY
     const tsQuery = term ? sql`websearch_to_tsquery('english', ${term})` : null;
