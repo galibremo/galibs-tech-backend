@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { eq, count, desc } from "drizzle-orm";
+import { eq, count, desc, or, ilike, and, type SQL } from "drizzle-orm";
 import { DRIZZLE_DATABASE_CONNECTION } from "src/core/database/drizzle/drizzle.tokens";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import schema from "src/core/database/drizzle/drizzle.schema";
@@ -28,6 +28,7 @@ export class CategoriesRepository {
     async listCategories(
         page: number = 1,
         limit: number = 10,
+        search?: string,
     ): Promise<{
         rows: typeof schema.categories.$inferSelect[];
         total: number;
@@ -35,15 +36,30 @@ export class CategoriesRepository {
         limit: number;
     }> {
         const offset = (page - 1) * limit;
+        const term = search?.trim();
+
+        const conditions: (SQL | undefined)[] = [];
+        if (term) {
+            const termForIlike = term.replace(/[%_]/g, '\\$&');
+            conditions.push(
+                or(
+                    ilike(schema.categories.name, `%${termForIlike}%`),
+                    ilike(schema.categories.slug, `%${termForIlike}%`),
+                )!,
+            );
+        }
+
+        const where = conditions.length > 0 ? and(...conditions) : undefined;
 
         const [rows, totalRows] = await Promise.all([
             this.db
                 .select()
                 .from(schema.categories)
+                .where(where)
                 .orderBy(desc(schema.categories.createdAt))
                 .limit(limit)
                 .offset(offset),
-            this.db.select({ value: count() }).from(schema.categories),
+            this.db.select({ value: count() }).from(schema.categories).where(where),
         ]);
 
         return {

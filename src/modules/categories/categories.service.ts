@@ -14,7 +14,7 @@ export class CategoriesService {
     async listCategories(query: CategoriesListQueryDto): Promise<CategoriesListResponse> {
         const page = query.page ?? 1;
         const limit = query.limit ?? 10;
-        const categories = await this.categoriesRepository.listCategories(page, limit);
+        const categories = await this.categoriesRepository.listCategories(page, limit, query.search);
 
         return {
             rows: categories.rows,
