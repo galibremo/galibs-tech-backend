@@ -4,7 +4,6 @@ import {
   foreignKey,
   index,
   integer,
-  numeric,
   pgTable,
   primaryKey,
   text,
@@ -110,26 +109,6 @@ export const productAttributeValues = pgTable(
     }).onDelete("cascade"),
     index("pav_product_attr_idx").on(table.productId, table.attributeId),
     index("pav_attr_option_idx").on(table.attributeId, table.attributeOptionId),
-  ],
-);
-
-export const productNumericAttributes = pgTable(
-  "product_numeric_attributes",
-  {
-    productId: uuid("product_id")
-      .notNull()
-      .references(() => products.id, { onDelete: "cascade" }),
-    attributeId: uuid("attribute_id")
-      .notNull()
-      .references(() => attributes.id, { onDelete: "cascade" }),
-    value: numeric("value", { precision: 18, scale: 4 }).notNull(),
-  },
-  (table) => [
-    // Alphabetical column order (see categoryAttributes).
-    primaryKey({ columns: [table.attributeId, table.productId] }),
-    index("product_numeric_attr_value_idx").on(table.attributeId, table.value),
-    // The key now leads with attribute_id, so per-product lookups need their own index.
-    index("product_numeric_attributes_product_idx").on(table.productId),
   ],
 );
 

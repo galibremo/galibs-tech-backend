@@ -7,7 +7,9 @@ import {
   gte,
   inArray,
   isNull,
+  like,
   lte,
+  or,
   sql,
   type SQL,
 } from 'drizzle-orm';
@@ -41,6 +43,9 @@ export type AttributeOptionMeta = {
   optionSortOrder: number;
 };
 
+/** The slice of a category row the listing queries need. */
+export type CategoryScope = { id: string; path: string };
+
 export type CategoryFilterDefinition = {
   attributeId: string;
   attributeCode: string;
@@ -64,37 +69,89 @@ export class CatalogRepository {
     });
   }
 
+  /**
+   * Filter groups for a category page: attributes assigned to the category
+   * itself or to any active descendant, de-duplicated per attribute. The
+   * category's own assignments win (and keep their sort order); inherited
+   * ones follow, ordered by the attribute's global sort order.
+   */
   async getCategoryFilterDefinitions(
-    categoryId: string,
+    category: CategoryScope,
   ): Promise<CategoryFilterDefinition[]> {
-    const mappings = await this.db.query.categoryAttributes.findMany({
-      where: eq(schema.categoryAttributes.categoryId, categoryId),
-      orderBy: [asc(schema.categoryAttributes.sortOrder)],
-      with: {
-        attribute: {
-          with: {
-            options: {
-              where: eq(schema.attributeOptions.isActive, true),
-              orderBy: [asc(schema.attributeOptions.sortOrder)],
-            },
-          },
-        },
-      },
-    });
+    const rows = await this.db
+      .select({
+        attributeId: schema.attributes.id,
+        attributeCode: schema.attributes.code,
+        attributeName: schema.attributes.name,
+        attributeSortOrder: schema.attributes.sortOrder,
+        categoryId: schema.categoryAttributes.categoryId,
+        sortOrder: schema.categoryAttributes.sortOrder,
+      })
+      .from(schema.categoryAttributes)
+      .innerJoin(
+        schema.categories,
+        eq(schema.categories.id, schema.categoryAttributes.categoryId),
+      )
+      .innerJoin(
+        schema.attributes,
+        eq(schema.attributes.id, schema.categoryAttributes.attributeId),
+      )
+      .where(
+        and(
+          this.categorySubtreeCondition(category),
+          eq(schema.attributes.isFilterable, true),
+        ),
+      );
 
-    return mappings
-      .filter((mapping) => mapping.attribute.isFilterable)
-      .map((mapping) => ({
-        attributeId: mapping.attribute.id,
-        attributeCode: mapping.attribute.code,
-        attributeName: mapping.attribute.name,
-        sortOrder: mapping.sortOrder,
-        options: mapping.attribute.options.map((option) => ({
-          id: option.id,
-          label: option.label,
-          sortOrder: option.sortOrder,
-        })),
-      }));
+    const own = rows
+      .filter((row) => row.categoryId === category.id)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    const inherited = rows
+      .filter((row) => row.categoryId !== category.id)
+      .sort(
+        (a, b) =>
+          a.attributeSortOrder - b.attributeSortOrder ||
+          a.sortOrder - b.sortOrder,
+      );
+
+    const chosen = new Map<string, (typeof rows)[number]>();
+    for (const row of [...own, ...inherited]) {
+      if (!chosen.has(row.attributeId)) {
+        chosen.set(row.attributeId, row);
+      }
+    }
+    if (chosen.size === 0) {
+      return [];
+    }
+
+    const options = await this.db.query.attributeOptions.findMany({
+      where: and(
+        inArray(schema.attributeOptions.attributeId, [...chosen.keys()]),
+        eq(schema.attributeOptions.isActive, true),
+      ),
+      orderBy: [asc(schema.attributeOptions.sortOrder)],
+    });
+    const optionsByAttribute = new Map<
+      string,
+      CategoryFilterDefinition['options']
+    >();
+    for (const option of options) {
+      const list = optionsByAttribute.get(option.attributeId) ?? [];
+      list.push({
+        id: option.id,
+        label: option.label,
+        sortOrder: option.sortOrder,
+      });
+      optionsByAttribute.set(option.attributeId, list);
+    }
+
+    return [...chosen.values()].map((row) => ({
+      attributeId: row.attributeId,
+      attributeCode: row.attributeCode,
+      attributeName: row.attributeName,
+      sortOrder: row.sortOrder,
+      options: optionsByAttribute.get(row.attributeId) ?? [],
+    }));
   }
 
   async findAttributeOptionsByIds(
@@ -123,12 +180,13 @@ export class CatalogRepository {
   }
 
   /**
-   * Returns parent product IDs in a category that match price, availability,
-   * and attribute filters (OR within attribute group, AND across groups).
+   * Returns parent product IDs in a category subtree (the category itself
+   * plus every active descendant) that match price, availability, and
+   * attribute filters (OR within attribute group, AND across groups).
    * Matches options on the parent product or any of its variants.
    */
   async findMatchingProductIds(params: {
-    categoryId: string;
+    category: CategoryScope;
     priceMin?: number;
     priceMax?: number;
     availability: StockStatus[];
@@ -150,6 +208,10 @@ export class CatalogRepository {
       .innerJoin(
         schema.productCategories,
         eq(schema.productCategories.productId, schema.products.id),
+      )
+      .innerJoin(
+        schema.categories,
+        eq(schema.categories.id, schema.productCategories.categoryId),
       )
       .where(whereClause);
 
@@ -277,14 +339,31 @@ export class CatalogRepository {
     return [];
   }
 
+  /**
+   * `categories` must be joined. Matches the category itself (even if it is
+   * inactive, since the caller already resolved it) plus every active
+   * descendant, using the materialised `path` ("desktops/gaming-pc/...").
+   */
+  private categorySubtreeCondition(category: CategoryScope): SQL {
+    const escapedPath = category.path.replace(/[\\%_]/g, (char) => `\\${char}`);
+    const descendantPattern = `${escapedPath}/%`;
+    return or(
+      eq(schema.categories.id, category.id),
+      and(
+        like(schema.categories.path, descendantPattern),
+        eq(schema.categories.isActive, true),
+      ),
+    ) as SQL;
+  }
+
   private buildBaseConditions(params: {
-    categoryId: string;
+    category: CategoryScope;
     priceMin?: number;
     priceMax?: number;
     availability: StockStatus[];
   }): SQL[] {
     const conditions: SQL[] = [
-      eq(schema.productCategories.categoryId, params.categoryId),
+      this.categorySubtreeCondition(params.category),
       eq(schema.products.isActive, true),
       isNull(schema.products.deletedAt),
     ];

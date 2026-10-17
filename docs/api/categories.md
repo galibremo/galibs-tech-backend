@@ -35,7 +35,13 @@ Covers category CRUD, category tree, catalog listing/filters, and category–att
 
 ## List query (CRUD list)
 
-[Common list params](./README.md#common-list-query-params); `sort`: `name` \| `createdAt` \| `updatedAt`
+[Common list params](./README.md#common-list-query-params); `sort`: `sortOrder` \| `name` \| `createdAt` \| `updatedAt`
+
+| Param | Required | Constraints / default |
+|-------|----------|------------------------|
+| `isActive` | no | `true` \| `false`. Omitted or `true`: active categories only. `false`: only soft-deleted ones (admin "trash" view). |
+
+Without `sort`, rows come back in `sortOrder` then `name`, matching the storefront menu.
 
 ---
 
@@ -54,6 +60,8 @@ Covers category CRUD, category tree, catalog listing/filters, and category–att
 ## `GET /categories/tree`
 
 **Auth:** Public · **Status:** 200
+
+The storefront menu tree: only categories with `isActive: true` **and** `showInMenu: true`, ordered by `sortOrder` then `name` at every level. A category whose parent is hidden is dropped along with its subtree, never promoted to the root. Use `GET /categories` (with `isActive=false` for the trash) to see everything.
 
 ### Response `data`
 
@@ -102,10 +110,8 @@ Covers category CRUD, category tree, catalog listing/filters, and category–att
 | Field | Required | Constraints / default |
 |-------|----------|------------------------|
 | `name` | yes | max 255 |
-| `slug` | yes | max 255 |
-| `parentId` | no | UUID \| null |
-| `path` | yes | max 512 |
-| `depth` | no | default `0` |
+| `slug` | yes | max 255; no whitespace or `/` (it becomes a `path` segment) |
+| `parentId` | no | UUID \| null; must reference an existing category (404 `parent_category_not_found` otherwise) |
 | `description` | no | nullable |
 | `shortDescription` | no | nullable |
 | `imageUrl` | no | nullable |
@@ -120,23 +126,36 @@ Covers category CRUD, category tree, catalog listing/filters, and category–att
 | `metaDescription` | no | nullable |
 | `seoContent` | no | nullable |
 
+`path` and `depth` are **not accepted** in the body (the schema is strict, so sending them is a validation error). The server derives them from `parentId` + `slug`:
+
+- root: `path = slug`, `depth = 0`
+- child: `path = parent.path + "/" + slug`, `depth = parent.depth + 1`
+
 ### Response `data`
 
 `Category`
+
+### Errors
+
+| Status | `code` | When |
+|--------|--------|------|
+| 404 | `parent_category_not_found` | `parentId` does not exist |
+| 409 | `slug_already_exists` | `slug` is taken |
+| 409 | `path_already_exists` | the computed `path` collides with an existing category |
 
 ### Example
 
 ```json
 {
-  "name": "Laptops",
-  "slug": "laptops",
-  "parentId": null,
-  "path": "/laptops",
-  "depth": 0,
+  "name": "Gaming PC",
+  "slug": "gaming-pc",
+  "parentId": "550e8400-e29b-41d4-a716-446655440001",
   "isActive": true,
   "showInMenu": true
 }
 ```
+
+Creates the category with `path: "desktops/gaming-pc"` and `depth: 1` when the parent is `desktops`.
 
 ---
 
@@ -152,11 +171,23 @@ Covers category CRUD, category tree, catalog listing/filters, and category–att
 
 ### Body
 
-All create fields optional; **at least one** required.
+All create fields optional; **at least one** required. `path` and `depth` are not accepted.
+
+Changing `slug` or `parentId` recomputes the category's own `path`/`depth` and, in the same transaction, rewrites the `path`/`depth` of **every descendant** (`old-path/x/y` becomes `new-path/x/y`). Set `parentId: null` to move a category to the root.
 
 ### Response `data`
 
 `Category`
+
+### Errors
+
+| Status | `code` | When |
+|--------|--------|------|
+| 400 | `invalid_parent` | `parentId` is the category itself or one of its descendants |
+| 404 | `category_not_found` | `:id` does not exist |
+| 404 | `parent_category_not_found` | `parentId` does not exist |
+| 409 | `slug_already_exists` | new `slug` is taken |
+| 409 | `path_already_exists` | the recomputed `path` collides with an existing category |
 
 ---
 
@@ -179,6 +210,8 @@ All create fields optional; **at least one** required.
 ---
 
 ## Catalog (by slug)
+
+Both endpoints operate on the **category subtree**: the category itself plus every active descendant, matched on the materialised `path` (`desktops/gaming-pc/intel-gaming-pc`). So `/categories/desktops/products` lists products linked to Gaming PC, Brand PC, All-in-One PC, Intel Gaming PC, etc., even though products are normally linked only to their leaf category. Filter groups are the union of the attributes assigned to the category and to its descendants (de-duplicated; the category's own assignments keep their sort order and come first). Facet counts, price and availability filters all run over the same subtree.
 
 ### `GET /categories/:slug/filters`
 

@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
 import { notFoundError } from '../../core/errors/domain-error';
-import { CatalogRepository } from './catalog.repository';
+import {
+  CatalogRepository,
+  type CategoryScope,
+} from './catalog.repository';
 import type {
   CatalogFacetGroup,
   CatalogFiltersResponse,
@@ -16,11 +19,11 @@ export class CatalogService {
   async getCategoryFilters(slug: string): Promise<CatalogFiltersResponse> {
     const category = await this.resolveCategoryBySlug(slug);
     const definitions =
-      await this.catalogRepository.getCategoryFilterDefinitions(category.id);
+      await this.catalogRepository.getCategoryFilterDefinitions(category);
 
     const candidateProductIds =
       await this.catalogRepository.findMatchingProductIds({
-        categoryId: category.id,
+        category,
         availability: [],
         filtersByAttribute: new Map(),
       });
@@ -47,7 +50,7 @@ export class CatalogService {
   ): Promise<CatalogProductsResponse> {
     const category = await this.resolveCategoryBySlug(slug);
     const definitions =
-      await this.catalogRepository.getCategoryFilterDefinitions(category.id);
+      await this.catalogRepository.getCategoryFilterDefinitions(category);
 
     const filtersByAttribute = await this.groupFiltersByAttribute(
       query.filter,
@@ -55,7 +58,7 @@ export class CatalogService {
 
     const matchingProductIds =
       await this.catalogRepository.findMatchingProductIds({
-        categoryId: category.id,
+        category,
         priceMin: query.priceMin,
         priceMax: query.priceMax,
         availability: query.availability,
@@ -70,7 +73,7 @@ export class CatalogService {
     });
 
     const facets = await this.buildFacetsWithCounts({
-      categoryId: category.id,
+      category,
       priceMin: query.priceMin,
       priceMax: query.priceMax,
       availability: query.availability,
@@ -128,7 +131,7 @@ export class CatalogService {
    * own selections but apply all other groups + price/availability/category.
    */
   private async buildFacetsWithCounts(params: {
-    categoryId: string;
+    category: CategoryScope;
     priceMin?: number;
     priceMax?: number;
     availability: CatalogProductsQueryDto['availability'];
@@ -145,7 +148,7 @@ export class CatalogService {
 
       const candidateProductIds =
         await this.catalogRepository.findMatchingProductIds({
-          categoryId: params.categoryId,
+          category: params.category,
           priceMin: params.priceMin,
           priceMax: params.priceMax,
           availability: params.availability,

@@ -14,20 +14,43 @@ import {
 } from '../../../core/validators/common.schema';
 
 const CATEGORY_SORTABLE_FIELDS: readonly SortableField[] = [
+  { name: 'sortOrder', queryName: 'sortOrder' },
   { name: 'name', queryName: 'name' },
   { name: 'createdAt', queryName: 'createdAt' },
   { name: 'updatedAt', queryName: 'updatedAt' },
 ] as const;
 
-export const CategoriesListQuerySchema = baseQuerySchema(CATEGORY_SORTABLE_FIELDS);
+export const CategoriesListQuerySchema = baseQuerySchema(
+  CATEGORY_SORTABLE_FIELDS,
+).extend({
+  /**
+   * Omitted: only active categories. `false`: only soft-deleted ones (for an
+   * admin "trash" view). `true`: same as omitted.
+   */
+  isActive: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((value) => value !== 'false'),
+});
+
+/**
+ * Slugs become segments of the materialised `path`, so they must not contain
+ * `/` or whitespace. `path` and `depth` are never accepted from the client:
+ * the service derives them from `parentId` + `slug` (see CategoriesService).
+ */
+const validateSlug = () =>
+  validateString('Slug', {
+    min: 1,
+    max: 255,
+    regex: /^[^\s/]+$/,
+    regexMsg: 'Slug must not contain whitespace or "/"',
+  });
 
 export const CreateCategorySchema = z
   .object({
     name: validateString('Name', { max: 255 }),
-    slug: validateString('Slug', { max: 255 }),
+    slug: validateSlug(),
     parentId: validateUUID('Parent ID').nullable().optional(),
-    path: validateString('Path', { max: 512 }),
-    depth: validateNumber('Depth').optional().default(0),
     description: validateString('Description').nullable().optional(),
     shortDescription: validateString('Short Description').nullable().optional(),
     imageUrl: validateString('Image URL').nullable().optional(),
@@ -47,10 +70,8 @@ export const CreateCategorySchema = z
 export const UpdateCategorySchema = z
   .object({
     name: validateString('Name', { max: 255 }).optional(),
-    slug: validateString('Slug', { max: 255 }).optional(),
+    slug: validateSlug().optional(),
     parentId: validateUUID('Parent ID').nullable().optional(),
-    path: validateString('Path', { max: 512 }).optional(),
-    depth: validateNumber('Depth').optional(),
     description: validateString('Description').nullable().optional(),
     shortDescription: validateString('Short Description').nullable().optional(),
     imageUrl: validateString('Image URL').nullable().optional(),

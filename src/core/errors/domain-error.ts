@@ -53,8 +53,23 @@ export const forbiddenError = (
 export const notFoundError = (code: string, message: string, meta?: DomainErrorMeta): DomainError =>
 	new DomainError(code, message, HttpStatus.NOT_FOUND, meta);
 
-export const isDatabaseUniqueViolation = (error: unknown): boolean =>
+export type DatabaseUniqueViolation = { code: '23505'; constraint?: string };
+
+const hasUniqueViolationCode = (error: unknown): error is DatabaseUniqueViolation =>
 	typeof error === 'object' &&
 	error !== null &&
-	'code' in error &&
 	(error as { code?: unknown }).code === '23505';
+
+/**
+ * Returns the underlying pg unique-violation error (code 23505, with `constraint`)
+ * or null. drizzle-orm wraps driver errors in a `DrizzleQueryError` whose `cause`
+ * is the pg error, so both the error and its `cause` are checked.
+ */
+export const getDatabaseUniqueViolation = (error: unknown): DatabaseUniqueViolation | null => {
+	if (hasUniqueViolationCode(error)) return error;
+	const cause = typeof error === 'object' && error !== null ? (error as { cause?: unknown }).cause : undefined;
+	return hasUniqueViolationCode(cause) ? cause : null;
+};
+
+export const isDatabaseUniqueViolation = (error: unknown): boolean =>
+	getDatabaseUniqueViolation(error) !== null;

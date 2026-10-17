@@ -8,7 +8,6 @@ import {
   attributeOptions,
   categoryAttributes,
   productAttributeValues,
-  productNumericAttributes,
 } from './attribute.drizzle.schema';
 import {
   productCategories,
@@ -74,7 +73,6 @@ export const attributesRelations = relations(attributes, ({ many }) => ({
   options: many(attributeOptions),
   categoryAttributes: many(categoryAttributes),
   productValues: many(productAttributeValues),
-  productNumericValues: many(productNumericAttributes),
   variantAttributeValues: many(productVariantAttributeValues),
 }));
 
@@ -123,7 +121,6 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   optionGroups: many(productOptionGroups),
   variants: many(productVariants),
   attributeValues: many(productAttributeValues),
-  numericAttributes: many(productNumericAttributes),
   specifications: many(productSpecifications),
   cartItems: many(cartItems),
   wishlistItems: many(wishlistItems),
@@ -169,20 +166,6 @@ export const productAttributeValuesRelations = relations(
     option: one(attributeOptions, {
       fields: [productAttributeValues.attributeOptionId],
       references: [attributeOptions.id],
-    }),
-  }),
-);
-
-export const productNumericAttributesRelations = relations(
-  productNumericAttributes,
-  ({ one }) => ({
-    product: one(products, {
-      fields: [productNumericAttributes.productId],
-      references: [products.id],
-    }),
-    attribute: one(attributes, {
-      fields: [productNumericAttributes.attributeId],
-      references: [attributes.id],
     }),
   }),
 );
